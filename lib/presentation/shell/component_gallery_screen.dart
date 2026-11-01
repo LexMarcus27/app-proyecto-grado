@@ -22,7 +22,7 @@ class ComponentGalleryScreen extends StatelessWidget {
       body: SafeArea(
         child: Column(
           children: [
-            const StatusBar(),
+            const StatusBar(showOnNative: true),
             // Encabezado con opción de volver a la activación.
             Padding(
               padding: const EdgeInsets.fromLTRB(8, 4, 16, 4),
@@ -268,3 +268,4 @@ class _CompanionSample extends StatelessWidget {
     );
   }
 }
+

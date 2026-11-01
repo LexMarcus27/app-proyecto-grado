@@ -266,6 +266,26 @@
         "executionId": "e491438e-6c3c-470a-a18e-feb582ad1dbc",
         "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
         "timestamp": 1793158462936
+      },
+      {
+        "executionId": "534abb9c-e166-4f77-a1d5-1bc9a572770a",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793553092573
+      },
+      {
+        "executionId": "534abb9c-e166-4f77-a1d5-1bc9a572770a",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793553317473
+      },
+      {
+        "executionId": "94f3bd9a-c674-40cb-a107-c83bcd2e3db0",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793554302868
+      },
+      {
+        "executionId": "94f3bd9a-c674-40cb-a107-c83bcd2e3db0",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793554354089
       }
     ],
     "2. Recorrido EMA completo con dependencias mínimas": [

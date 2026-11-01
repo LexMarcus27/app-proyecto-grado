@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 
 import 'package:contigo/app/di.dart';
 import 'package:contigo/app/theme.dart';
@@ -220,7 +220,7 @@ void main() {
         }
         // Hilo 4 (índice 3): primer ítem del bloque de relación.
         expect(find.text('Hilo 4 de 9'), findsOneWidget);
-        expect(find.textContaining('Sobre tu relación con'), findsOneWidget);
+        expect(find.textContaining('relación con M.'), findsWidgets);
         await _answerCurrentRange(tester);
 
         // El borrador tiene la respuesta de relación en el índice 3.
@@ -406,6 +406,154 @@ void main() {
 
       // La UI arranca en el primer hilo de nuevo.
       expect(find.text('Hilo 1 de 9'), findsOneWidget);
+    });
+  });
+
+  // === E2-01: reinicio por cambio de día al REANUDAR (ciclo de vida) y antes
+  // de avanzar ===
+  group('E2-01 · cambio de día en el ciclo de vida y antes de avanzar', () {
+    testWidgets('al reanudar (resumed) con la fecha ya cambiada, la misma '
+        'pantalla reinicia a un borrador fresco de hoy, sin heredar '
+        'respuestas ni omisión', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final journey = seedForScenario(DemoScenario.withActiveLink);
+      final referenceM = emaReferenceForPerson(journey, 'demo-m')!;
+
+      // Arranca con un borrador de HOY, con avance; luego "pasa el día".
+      final draftStore = _FakeEmaDraftStore(
+        createEmaDraft(referenceM).copyWith(
+          answers: [true, false, null, for (var i = 3; i < emaItems.length; i++) null],
+          questionIndex: 2,
+        ),
+      );
+
+      await tester.pumpWidget(
+        _host(
+          journeyRepository: _MutableJourneyRepository(journey),
+          referenceStore: _FakeEmaReferenceStore(referenceM),
+          draftStore: draftStore,
+          prefs: prefs,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Hilo 3 de 9'), findsOneWidget);
+
+      // La app pasa a segundo plano y el día cambia: el borrador de sesión
+      // queda con day = ayer. Luego se entrega el evento de reanudación a la
+      // MISMA pantalla montada (sin desmontar ni reabrir el flujo). El
+      // observador registrado reevalúa el día y reinicia el registro.
+      final yesterday = emaDayKey(
+        DateTime.now().subtract(const Duration(days: 1)),
+      );
+      await draftStore.saveDraft(
+        (await draftStore.loadTodayDraft())!.copyWith(day: yesterday),
+      );
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      );
+      await tester.pumpAndSettle();
+
+      final resumed = await _currentDraft(draftStore);
+      expect(resumed.day, emaDayKey());
+      expect(answeredEmaCount(resumed), 0);
+      expect(resumed.questionIndex, 0);
+      expect(resumed.relationshipOmission, isNull);
+      expect(resumed.reference, referenceM);
+      expect(find.text('Hilo 1 de 9'), findsOneWidget);
+    });
+
+    testWidgets('un registro COMPLETADO de ayer no se muestra como el de hoy '
+        'al reanudar', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      final journey = seedForScenario(DemoScenario.withActiveLink);
+      final referenceM = emaReferenceForPerson(journey, 'demo-m')!;
+
+      // Registro COMPLETADO de HOY (resumen "9 de 9" en pantalla).
+      var completed = createEmaDraft(referenceM);
+      for (var i = 0; i < emaItems.length; i++) {
+        completed = setEmaAnswer(completed, i, i < 3 ? false : 0);
+      }
+      completed = completed.copyWith(completed: true);
+      final draftStore = _FakeEmaDraftStore(completed);
+
+      await tester.pumpWidget(
+        _host(
+          journeyRepository: _MutableJourneyRepository(journey),
+          referenceStore: _FakeEmaReferenceStore(referenceM),
+          draftStore: draftStore,
+          prefs: prefs,
+        ),
+      );
+      await tester.pumpAndSettle();
+      // Se muestra el resultado del registro completado de hoy.
+      expect(find.text('Tu registro de hoy'), findsOneWidget);
+
+      // Pasa el día (el registro completado queda con day = ayer) y la misma
+      // pantalla recibe el evento de reanudación.
+      final yesterday = emaDayKey(
+        DateTime.now().subtract(const Duration(days: 1)),
+      );
+      await draftStore.saveDraft(completed.copyWith(day: yesterday));
+      tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+      tester.binding.handleAppLifecycleStateChanged(
+        AppLifecycleState.resumed,
+      );
+      await tester.pumpAndSettle();
+
+      // El resultado de ayer ya no se muestra; arranca un registro fresco.
+      expect(find.text('Tu registro de hoy'), findsNothing);
+      expect(find.text('Hilo 1 de 9'), findsOneWidget);
+      final resumed = await _currentDraft(draftStore);
+      expect(resumed.day, emaDayKey());
+      expect(resumed.completed, isFalse);
+      expect(answeredEmaCount(resumed), 0);
+    });
+  });
+
+  // === E2-02: "Ir a Tu mapa de red" abre y PERMANECE en el mapa (no cae a
+  // Inicio PCS) ===
+  group('E2-02 · navegación de la revisión al mapa', () {
+    testWidgets('revocación sin otra persona activa: "Ir a Tu mapa de red" '
+        'lleva al mapa y NO a Inicio PCS', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      // Solo demo-m activo (Caso A tras revocar).
+      final journey = createDemoJourney();
+      final referenceM = emaReferenceForPerson(journey, 'demo-m')!;
+      final repo = _MutableJourneyRepository(journey);
+
+      await tester.pumpWidget(
+        _host(
+          journeyRepository: repo,
+          referenceStore: _FakeEmaReferenceStore(referenceM),
+          draftStore: _FakeEmaDraftStore(),
+          prefs: prefs,
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Hilo 1 de 9'), findsOneWidget);
+
+      // Revoca el vínculo → aparece la revisión de referencia obsoleta.
+      repo.emit(journey.copyWith(
+        associations: [
+          for (final a in journey.associations) a.copyWith(active: false),
+        ],
+      ));
+      await tester.pumpAndSettle();
+      expect(find.text('Revisa la persona de tu registro'), findsOneWidget);
+
+      // Pulsar "Ir a Tu mapa de red" debe llevar al mapa, NO a Inicio PCS.
+      await tester.tap(find.text('Ir a Tu mapa de red'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('mapa-red'), findsOneWidget);
+      expect(find.text('inicio-pcs'), findsNothing);
+      expect(find.text('Revisa la persona de tu registro'), findsNothing);
     });
   });
 }

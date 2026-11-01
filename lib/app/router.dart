@@ -113,6 +113,13 @@ final routerProvider = Provider<GoRouter>((ref) {
               label: 'Ir a mi registro EMA',
               onPressed: () => context.goNamed(AppRoute.ema),
             ),
+            // Entrada visible al mapa mínimo para cambiar la persona de
+            // referencia activa (E2-03), conservando la confirmación explícita
+            // en el propio mapa. Temporal hasta el home real del PCS (tarea 3.4).
+            PlaceholderAction(
+              label: 'Ir a Tu mapa de red (cambiar persona de referencia)',
+              onPressed: () => context.goNamed(AppRoute.networkMap),
+            ),
           ],
         ),
       ),
@@ -250,3 +257,4 @@ class _SessionRefreshListenable extends ChangeNotifier {
     super.dispose();
   }
 }
+

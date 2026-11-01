@@ -1,4 +1,4 @@
-import 'package:contigo/app/di.dart';
+﻿import 'package:contigo/app/di.dart';
 import 'package:contigo/app/theme.dart';
 import 'package:contigo/domain/ema/ema.dart';
 import 'package:contigo/domain/journey/journey.dart';
@@ -274,10 +274,10 @@ void main() {
           expect(find.text('Hilo $position de 9'), findsOneWidget);
           // El bloque de relación (hilos 4-6) muestra el nombre de referencia.
           if (find
-              .textContaining('Sobre tu relación con')
+              .textContaining('relación con M.')
               .evaluate()
               .isNotEmpty) {
-            expect(find.textContaining('M.'), findsWidgets);
+            expect(find.textContaining('relación con M.'), findsWidgets);
             sawRelationshipName = true;
           }
           await _answerCurrentAndAdvance(tester);
@@ -433,3 +433,6 @@ void main() {
     });
   });
 }
+
+
+

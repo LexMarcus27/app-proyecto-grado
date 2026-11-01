@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,6 +42,21 @@ import 'ema_stale_reference.dart';
 ///   toca** (solo se escribe el borrador de sesión).
 /// - Si no hay a dónde volver (p. ej. se alcanzó por ruta directa), tras aplicar
 ///   la omisión navega al inicio del PCS.
+/// Resultado de la revisión de referencia obsoleta, devuelto al flujo EMA al
+/// cerrarse la pantalla (`Navigator.pop`).
+///
+/// La pantalla **no** navega por sí misma al mapa ni al inicio (eso causaba el
+/// hallazgo E2-02, en el que "Ir a Tu mapa de red" terminaba en Inicio PCS):
+/// solo informa la intención y el flujo decide la navegación.
+enum EmaStaleReviewResult {
+  /// El usuario pidió ir a "Tu mapa de red" para revisar/confirmar otra persona.
+  openNetworkMap,
+
+  /// Caso A: el usuario eligió continuar hoy; el flujo recibe además el borrador
+  /// omitido por separado (`pop` con un [EmaDraft]).
+  continueToday,
+}
+
 class EmaStaleReferenceScreen extends ConsumerWidget {
   const EmaStaleReferenceScreen({super.key});
 
@@ -64,7 +79,7 @@ class EmaStaleReferenceScreen extends ConsumerWidget {
                 error: (error, _) => const _ErrorBody(),
                 data: (journey) => _ReviewBody(
                   mode: emaStaleReferenceMode(savedReference, journey),
-                  onOpenNetwork: () => context.goNamed(AppRoute.networkMap),
+                  onOpenNetwork: () => context.pop(EmaStaleReviewResult.openNetworkMap),
                   onContinueToday: () => _continueToday(context, ref, journey),
                 ),
               ),
@@ -231,3 +246,4 @@ class _ErrorBody extends StatelessWidget {
     );
   }
 }
+

@@ -1,4 +1,4 @@
-import 'package:contigo/app/theme.dart';
+﻿import 'package:contigo/app/theme.dart';
 import 'package:contigo/presentation/widgets/contigo_button.dart';
 import 'package:contigo/presentation/widgets/contigo_card.dart';
 import 'package:contigo/presentation/widgets/status_bar.dart';
@@ -78,14 +78,27 @@ void main() {
   });
 
   group('StatusBar', () {
+    // La maqueta se oculta en móvil nativo (E2-04) para no duplicar la barra
+    // del sistema; estas pruebas unitarias ejercitan su render con
+    // showOnNative: true (como la galería de componentes).
     testWidgets('muestra la hora por defecto 9:41', (tester) async {
-      await tester.pumpWidget(_host(const StatusBar()));
+      await tester.pumpWidget(_host(const StatusBar(showOnNative: true)));
       expect(find.text('9:41'), findsOneWidget);
     });
 
     testWidgets('acepta una hora personalizada', (tester) async {
-      await tester.pumpWidget(_host(const StatusBar(time: '10:30')));
+      await tester.pumpWidget(
+        _host(const StatusBar(time: '10:30', showOnNative: true)),
+      );
       expect(find.text('10:30'), findsOneWidget);
+    });
+
+    testWidgets('en móvil nativo no dibuja la maqueta (usa la barra del sistema)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_host(const StatusBar()));
+      expect(find.text('9:41'), findsNothing);
     });
   });
 }
+

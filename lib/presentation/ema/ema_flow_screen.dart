@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -87,7 +87,8 @@ const _emaFeatureLayer = FeatureLayerInfo(
   layer: FeatureLayer.local,
 );
 
-class _EmaFlowScreenState extends ConsumerState<EmaFlowScreen> {
+class _EmaFlowScreenState extends ConsumerState<EmaFlowScreen>
+    with WidgetsBindingObserver {
   /// Borrador del día en curso (solo sesión). `null` mientras se prepara.
   EmaDraft? _draft;
 
@@ -110,9 +111,27 @@ class _EmaFlowScreenState extends ConsumerState<EmaFlowScreen> {
   @override
   void initState() {
     super.initState();
+    // Observa el ciclo de vida para reevaluar el día al reanudar (E2-01).
+    WidgetsBinding.instance.addObserver(this);
     // La preparación necesita el `JourneyState`; se lanza tras el primer frame,
     // cuando los providers están disponibles.
     WidgetsBinding.instance.addPostFrameCallback((_) => _handleEntry());
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Al volver al primer plano se reevalúa el día (E2-01): si cambió, el
+    // registro abierto se reinicia a un borrador fresco del nuevo día.
+    if (state == AppLifecycleState.resumed) {
+      _rolloverIfNewDay();
+    }
   }
 
   /// Prepara el borrador del día y resuelve el gating de entrada una sola vez.
@@ -167,13 +186,19 @@ class _EmaFlowScreenState extends ConsumerState<EmaFlowScreen> {
     switch (gate) {
       case EmaFlowGate.staleReference:
         // Revisión de referencia obsoleta (2.12). Caso A (sin personas activas)
-        // devuelve un borrador omitido con el que continuamos; Caso B dirige al
-        // mapa y no devuelve borrador: en ese caso salimos del flujo.
-        final result = await Navigator.of(context).push<EmaDraft>(
+        // devuelve un borrador omitido con el que continuamos; "Ir a Tu mapa de
+        // red" devuelve [EmaStaleReviewResult.openNetworkMap] y abrimos el mapa
+        // permaneciendo en él (E2-02); si el usuario retrocede (`null`),
+        // salimos del flujo.
+        final result = await Navigator.of(context).push<Object?>(
           MaterialPageRoute(builder: (_) => const EmaStaleReferenceScreen()),
         );
         if (!mounted) return;
-        if (result == null) {
+        if (result == EmaStaleReviewResult.openNetworkMap) {
+          _goToNetworkMap();
+          return;
+        }
+        if (result is! EmaDraft) {
           _exitFlow();
           return;
         }
@@ -294,18 +319,36 @@ class _EmaFlowScreenState extends ConsumerState<EmaFlowScreen> {
     if (_reviewingStale || !mounted) return;
     _reviewingStale = true;
 
-    final result = await Navigator.of(context).push<EmaDraft>(
+    final result = await Navigator.of(context).push<Object?>(
       MaterialPageRoute(builder: (_) => const EmaStaleReferenceScreen()),
     );
     _reviewingStale = false;
     if (!mounted) return;
-    if (result == null) {
-      // Caso B / cancelación: el usuario fue dirigido al mapa. Salimos del
-      // flujo; al volver, la entrada/reconciliación re-evaluará el estado.
+    if (result == EmaStaleReviewResult.openNetworkMap) {
+      // "Ir a Tu mapa de red": abrir el mapa y PERMANECER en él para revisar o
+      // confirmar otra persona (E2-02). No se cae a Inicio PCS.
+      _goToNetworkMap();
+      return;
+    }
+    if (result is! EmaDraft) {
+      // El usuario retrocedió sin elegir: salimos del flujo conservando el
+      // borrador de sesión.
       _exitFlow();
       return;
     }
     await _update(result);
+  }
+
+  /// Navega al mapa mínimo de red y permanece en él (`go` sobre el router
+  /// raíz), para que el usuario revise o confirme otra persona de referencia.
+  ///
+  /// Se usa cuando la revisión de referencia obsoleta devuelve
+  /// [EmaStaleReviewResult.openNetworkMap]. Antes, la revisión llamaba a
+  /// `goNamed` desde una ruta empujada y el flujo caía a Inicio PCS (E2-02);
+  /// ahora la revisión ya se cerró (`pop`) y es el flujo quien navega al mapa.
+  void _goToNetworkMap() {
+    if (!mounted) return;
+    context.goNamed(AppRoute.networkMap);
   }
 
   /// Persiste [next] en la sesión y refresca el estado del cuestionario.
@@ -326,6 +369,15 @@ class _EmaFlowScreenState extends ConsumerState<EmaFlowScreen> {
   void _advance() {
     final current = _draft;
     if (current == null) return;
+
+    // Reevaluación del día antes de avanzar (E2-01): si cambió el día local,
+    // no se avanza el registro de ayer; se reinicia a un borrador fresco del
+    // nuevo día y el usuario reempieza (re-aplicando el gating si corresponde).
+    if (current.day != emaDayKey()) {
+      _rolloverIfNewDay();
+      return;
+    }
+
     final indices = emaQuestionIndices(current);
     final position = indices.indexOf(current.questionIndex);
     if (position < 0) return;
@@ -342,6 +394,40 @@ class _EmaFlowScreenState extends ConsumerState<EmaFlowScreen> {
     } else if (canCompleteEma(current)) {
       _update(current.copyWith(completed: true));
     }
+  }
+
+  /// Reevalúa el día y, si cambió, reinicia el registro al nuevo día (E2-01).
+  ///
+  /// Toma el borrador de sesión, le aplica [prepareEmaDay] con la referencia
+  /// guardada: en un día nuevo esto devuelve un borrador fresco
+  /// ([createEmaDraft]) sin respuestas ni `relationshipOmission` heredados, y
+  /// un registro ya completado del día anterior deja de mostrarse como el de
+  /// hoy. Tras el reinicio, re-ejecuta el gating de entrada para que —si la
+  /// referencia guardada quedó inactiva— se presente de nuevo la revisión
+  /// correspondiente. Si el día no cambió, no produce ningún efecto observable.
+  Future<void> _rolloverIfNewDay() async {
+    if (_draft == null || _reviewingStale) return;
+    final today = emaDayKey();
+    // Se re-lee el borrador de la sesión (fuente de verdad): al reanudar, el
+    // borrador pudo cambiar de día mientras la app estaba en segundo plano.
+    final stored = await ref.read(emaDraftStoreProvider).loadTodayDraft();
+    if (!mounted) return;
+    final current = stored ?? _draft!;
+    if (current.day == today) {
+      if (current != _draft) setState(() => _draft = current);
+      return;
+    }
+    final savedReference = await ref
+        .read(emaReferenceStoreProvider)
+        .loadReference();
+    if (!mounted) return;
+
+    final fresh = prepareEmaDay(current, savedReference, today);
+    await _update(fresh);
+
+    // Re-aplica el gating del nuevo día (p. ej. referencia inactiva → revisión).
+    final journey = ref.read(networkJourneyProvider).value;
+    if (journey != null) await _reconcile(journey);
   }
 
   /// Vuelve al ítem presentado anterior.
@@ -455,6 +541,7 @@ class _EmaFlowScreenState extends ConsumerState<EmaFlowScreen> {
           onAdvance: _advance,
           onBack: _goBack,
           onExit: _exitFlow,
+          onOpenNetwork: _goToNetworkMap,
         );
       },
     );
@@ -546,9 +633,16 @@ class _Banner extends StatelessWidget {
   }
 }
 
-/// Indicador de avance ligero: una fila de "hilos" (puntos) donde los ítems ya
-/// cubiertos se pintan en azul y el resto en celeste, equivalente mínimo al SVG
-/// de hilos del prototipo (`.ema-thread-banner svg`).
+/// Color de los hilos aún no cubiertos en el indicador de avance
+/// (`#CFE3EE`), como el trazo pendiente del SVG de hilos del prototipo.
+const Color _threadPending = Color(0xFFCFE3EE);
+
+/// Indicador de avance con **hilos curvos**, fiel al prototipo
+/// (`.ema-thread-banner svg`): dibuja un trazo curvo corto por cada ítem
+/// presentado; los ya cubiertos (`index <= position`) en azul
+/// [EmaStyle.blue] y el resto en [_threadPending]. Sustituye a los puntos
+/// previos (E2-04). Es decorativo: el avance accesible lo expone el texto
+/// "Hilo N de M" del banner.
 class _ThreadProgress extends StatelessWidget {
   const _ThreadProgress({required this.position, required this.total});
 
@@ -558,27 +652,55 @@ class _ThreadProgress extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 86,
-      child: Wrap(
-        alignment: WrapAlignment.end,
-        spacing: 6,
-        runSpacing: 6,
-        children: [
-          for (var index = 0; index < total; index++)
-            Container(
-              width: 10,
-              height: 10,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: index <= position
-                    ? EmaStyle.blue
-                    : const Color(0xFFCFE3EE),
-              ),
-            ),
-        ],
+      width: 100,
+      height: 44,
+      child: CustomPaint(
+        painter: _ThreadProgressPainter(position: position, total: total),
       ),
     );
   }
+}
+
+/// Pinta una fila de hilos curvos (una onda corta por ítem presentado),
+/// replicando el motivo de hilos del prototipo en vez de puntos.
+class _ThreadProgressPainter extends CustomPainter {
+  _ThreadProgressPainter({required this.position, required this.total});
+
+  final int position;
+  final int total;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (total <= 0) return;
+    // Una celda por hilo; cada hilo es una onda (q-curve) centrada verticalmente.
+    final cellWidth = size.width / total;
+    final strokeWidth = cellWidth < 14 ? 2.5 : 3.0;
+    final midY = size.height / 2;
+    final amp = (size.height / 2 - strokeWidth).clamp(3.0, 9.0);
+
+    for (var index = 0; index < total; index++) {
+      final covered = index <= position;
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = strokeWidth
+        ..strokeCap = StrokeCap.round
+        ..color = covered ? EmaStyle.blue : _threadPending;
+
+      // Margen interno por celda para separar los hilos.
+      final left = index * cellWidth + cellWidth * 0.14;
+      final right = (index + 1) * cellWidth - cellWidth * 0.14;
+      final span = (right - left).clamp(1.0, cellWidth);
+      final path = Path()..moveTo(left, midY);
+      // Onda corta: sube y baja (dos cuartos de curva), como un hilo tejido.
+      path.quadraticBezierTo(left + span * 0.25, midY - amp, left + span * 0.5, midY);
+      path.quadraticBezierTo(left + span * 0.75, midY + amp, left + span, midY);
+      canvas.drawPath(path, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ThreadProgressPainter oldDelegate) =>
+      oldDelegate.position != position || oldDelegate.total != total;
 }
 
 /// Chip de contexto de la referencia para los ítems de relación, fiel al
@@ -605,18 +727,11 @@ class _ReferenceContextChip extends StatelessWidget {
           const Icon(Icons.person_outline, size: 20, color: EmaStyle.blueText),
           const SizedBox(width: 9),
           Expanded(
-            child: Text.rich(
-              TextSpan(
-                text: 'Sobre tu relación con ',
-                style: (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-                  color: EmaStyle.blueText,
-                ),
-                children: [
-                  TextSpan(
-                    text: referenceName,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ],
+            child: Text(
+              'Sobre tu relación con $referenceName',
+              style: (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+                color: EmaStyle.blueText,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ),
@@ -772,6 +887,7 @@ class _QuestionnaireBody extends StatelessWidget {
     required this.onAdvance,
     required this.onBack,
     required this.onExit,
+    required this.onOpenNetwork,
   });
 
   final EmaDraft draft;
@@ -780,6 +896,9 @@ class _QuestionnaireBody extends StatelessWidget {
   final VoidCallback onAdvance;
   final VoidCallback onBack;
   final VoidCallback onExit;
+
+  /// Abre el mapa mínimo de red para cambiar la persona de referencia (E2-03).
+  final VoidCallback onOpenNetwork;
 
   @override
   Widget build(BuildContext context) {
@@ -831,6 +950,20 @@ class _QuestionnaireBody extends StatelessWidget {
                   padding: const EdgeInsets.only(bottom: 12),
                   child: _ReferenceContextChip(referenceName: referenceName),
                 ),
+              // Entrada visible para cambiar la persona de referencia desde el
+              // mapa mínimo (E2-03), disponible cuando hay una referencia en el
+              // registro. La confirmación del cambio sigue siendo explícita en
+              // el propio mapa.
+              if (draft.reference != null) ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: _EmaThreadLink(
+                    label: 'Cambiar persona de referencia (Tu mapa de red)',
+                    onPressed: onOpenNetwork,
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               // Intro con la ventana temporal + texto del ítem.
               Text(
                 intro,
@@ -839,11 +972,17 @@ class _QuestionnaireBody extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
+              // Pregunta principal en la serif de títulos (Lora), jerarquía
+              // ~29/35 del prototipo (.ema-thread-question h2) (E2-04).
               Text(
                 item.text,
-                style: (textTheme.titleMedium ?? const TextStyle()).copyWith(
-                  color: ContigoColors.ink,
-                ),
+                style:
+                    (textTheme.headlineMedium ?? const TextStyle()).copyWith(
+                      color: ContigoColors.ink,
+                      fontSize: 29,
+                      height: 35 / 29,
+                      fontWeight: FontWeight.w700,
+                    ),
               ),
               const SizedBox(height: 20),
               // Ítem binario o de rango, cableado a setEmaAnswer vía onAnswer.
@@ -1016,3 +1155,11 @@ class _ErrorBody extends StatelessWidget {
     );
   }
 }
+
+
+
+
+
+
+
+

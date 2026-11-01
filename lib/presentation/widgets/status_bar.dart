@@ -1,3 +1,4 @@
+﻿import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../../app/theme.dart';
@@ -12,13 +13,35 @@ import '../../app/theme.dart';
 /// Es decorativa: se marca con [ExcludeSemantics] para no introducir ruido en
 /// los lectores de pantalla, igual que los glifos `aria-hidden` del prototipo.
 class StatusBar extends StatelessWidget {
-  const StatusBar({super.key, this.time = '9:41'});
+  const StatusBar({super.key, this.time = '9:41', this.showOnNative = false});
 
   /// Hora mostrada a la izquierda. El prototipo usa el valor fijo `9:41`.
   final String time;
 
+  /// Si es `true`, dibuja la maqueta también en dispositivos nativos. Por
+  /// defecto es `false`: en la app nativa (Android/iOS) la maqueta `9:41`
+  /// **no** se dibuja y se usa la barra de estado real del sistema (hallazgo
+  /// E2-04); solo se muestra en web/escritorio y en pruebas, donde no hay una
+  /// barra del sistema que duplicar. Los flujos de pantalla la usan con el valor
+  /// por defecto; una pantalla de desarrollo puede forzarla con `showOnNative`.
+  final bool showOnNative;
+
+  /// `true` en plataformas móviles nativas (Android/iOS), donde ya existe la
+  /// barra de estado del sistema.
+  static bool get _isNativeMobile =>
+      !kIsWeb &&
+      (defaultTargetPlatform == TargetPlatform.android ||
+          defaultTargetPlatform == TargetPlatform.iOS);
+
   @override
   Widget build(BuildContext context) {
+    // En móvil nativo se evita duplicar la barra del sistema: no se dibuja la
+    // maqueta `9:41` (E2-04). SafeArea, aportado por las pantallas, sigue
+    // protegiendo el contenido bajo la barra real.
+    if (_isNativeMobile && !showOnNative) {
+      return const SizedBox.shrink();
+    }
+
     final textTheme = Theme.of(context).textTheme;
     return ExcludeSemantics(
       child: SizedBox(
@@ -158,3 +181,4 @@ class _BatteryPainter extends CustomPainter {
   @override
   bool shouldRepaint(_BatteryPainter oldDelegate) => oldDelegate.color != color;
 }
+
