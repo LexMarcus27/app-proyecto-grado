@@ -1,0 +1,122 @@
+name: contigo
+description: "A new Flutter project."
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.13.7
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.8
+
+  # Dependencias base del proyecto (ver design.md):
+  # Gestión de estado e inyección de dependencias (providers / ProviderScope).
+  flutter_riverpod: ^3.4.3
+  # Navegación declarativa con rutas nombradas y guardas por rol.
+  go_router: ^18.1.1
+  # Igualdad por valor para modelos inmutables del dominio.
+  equatable: ^3.0.0
+  # Persistencia local inicial (JourneyState e IDs de Referencia_EMA).
+  shared_preferences: ^2.5.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  # `test` es el framework de pruebas del dominio (Dart puro) ejecutable con
+  # `dart test`. La lógica de dominio no depende de Flutter, por lo que sus
+  # pruebas se corren sin el harness de Flutter.
+  test: ^1.25.0
+
+  # Librería de property-based testing para Dart (estilo QuickCheck con
+  # shrinking). Uso selectivo posterior: POMP, completitud EMA, autorización
+  # por tupla y rotación de pasos de conexión (ver design.md, Testing Strategy).
+  glados: ^1.1.7
+
+  # The "flutter_lints" package below contains a set of recommended lints to
+  # encourage good coding practices. The lint set provided by the package is
+  # activated in the `analysis_options.yaml` file located at the root of your
+  # package. See that file for information about deactivating specific lint
+  # rules and activating additional ones.
+  flutter_lints: ^6.0.0
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # Recursos multimedia del prototipo "Contigo", incorporados al bundle
+  # verbatim (sin alterar, recomprimir ni reordenar). Se preserva la estructura
+  # de carpetas del prototipo (public/media/*) para trazabilidad del origen:
+  #   - assets/media/plan-desenredo/   -> videos del relato del plan de
+  #     seguridad "Las crisis también pasan" (plan-desenredo-1.mp4, -2.mp4).
+  #   - assets/media/caring-messages/  -> video de la guía de mensajes de
+  #     cuidado (metafora.mp4), avatar del acompañante / CompanionNote
+  #     (avatar.png) e ilustraciones de la guía.
+  # Las rutas tipadas se exponen desde lib/content (AppMedia); las pantallas
+  # narrativas y de guía las consumen por esas constantes, nunca con literales.
+  assets:
+    - assets/media/plan-desenredo/
+    - assets/media/caring-messages/
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
+
+  # Fuentes tipográficas empacadas con la app (licencia SIL Open Font License).
+  #
+  # - Inter (CUERPO): tipografía del body del prototipo (`font-family: 'Inter'`).
+  #   El prototipo web la tomaba del sistema/fuente web; en Android no está
+  #   disponible, así que aquí se empaca para evitar un fallback silencioso.
+  # - Lora (TÍTULOS): SUSTITUCIÓN del serif del prototipo. El prototipo usa
+  #   Georgia para los títulos (`font: 700 .. Georgia, serif`), pero Georgia no
+  #   se distribuye en Android. Lora es una serif OFL de trazo cálido y buena
+  #   legibilidad, cercana al carácter de Georgia; se empaca para los títulos.
+  #   En iOS/web se mantiene la cadena de respaldo Georgia → Times New Roman →
+  #   serif (ver lib/app/theme.dart, displayFontFallback).
+  #
+  # Ambas son fuentes variables (eje `wght`): Flutter aplica el `fontWeight`
+  # solicitado sobre el eje de peso de la fuente variable. Las licencias OFL
+  # acompañan a los binarios (assets/fonts/Inter-OFL.txt, Lora-OFL.txt); ver
+  # assets/fonts/README.md para origen y atribución.
+  fonts:
+    - family: Inter
+      fonts:
+        - asset: assets/fonts/Inter-Variable.ttf
+    - family: Lora
+      fonts:
+        - asset: assets/fonts/Lora-Variable.ttf

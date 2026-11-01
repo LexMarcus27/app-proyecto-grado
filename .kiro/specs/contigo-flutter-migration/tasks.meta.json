@@ -1,0 +1,279 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Crear el proyecto Flutter y la estructura de carpetas del diseño": [
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140012268
+      },
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140161461
+      }
+    ],
+    "1.2 Agregar dependencias base del proyecto": [
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140165098
+      },
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140260547
+      }
+    ],
+    "1.3 Montar el app shell con ProviderScope y go_router": [
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140264776
+      },
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140564765
+      }
+    ],
+    "1.4 Portar el estilo visual del prototipo (tema)": [
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140265767
+      },
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140565727
+      }
+    ],
+    "1.6 Montar el scaffold de carga de Contenido_Clinico": [
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140267087
+      },
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140567285
+      }
+    ],
+    "1.7 Importar y cablear los recursos multimedia del prototipo": [
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140268239
+      },
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140568236
+      },
+      {
+        "executionId": "4e604647-6c31-476b-a8f1-99247a056d9b",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793141845468
+      }
+    ],
+    "1.5 Crear los componentes de UI reutilizables equivalentes al prototipo": [
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140572536
+      },
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140977177
+      }
+    ],
+    "1. Base del proyecto y estilo visual": [
+      {
+        "executionId": "0d431e25-8508-4e43-82de-faaf5fe41aba",
+        "chatSessionId": "sess_9ab1bd3d-2fa4-4a05-b0d4-fbc54bf107eb",
+        "timestamp": 1793140977586
+      }
+    ],
+    "2.1 Portar el modelo de journey y la autorización mínima para la referencia EMA": [
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793149555208
+      },
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793149769645
+      }
+    ],
+    "2.3 Portar el dominio EMA (daily-nine-v2)": [
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793149774631
+      },
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793150044252
+      }
+    ],
+    "2.2 Portar las pruebas de autorización/journey del prototipo (obligatorias)": [
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793150049603
+      },
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793150169042
+      }
+    ],
+    "2.4 Portar las pruebas EMA del prototipo (obligatorias)": [
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793150173528
+      },
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793150348228
+      }
+    ],
+    "2.7 Implementar JourneyRepository local y su provider": [
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793150352939
+      },
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793150612934
+      }
+    ],
+    "2.8 Implementar EmaReferenceStore (solo IDs) y EmaDraftStore de sesión": [
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793150617498
+      },
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793150813956
+      }
+    ],
+    "2.10 Crear la sesión demo y los datos semilla para ejercitar el EMA": [
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793150820187
+      },
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793151059190
+      }
+    ],
+    "2.14 Implementar los ítems EMA (rango y binario) con accesibilidad": [
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793151065662
+      },
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793151671702
+      }
+    ],
+    "2.15 Implementar la entrada mínima al mapa de red para confirmar referencia": [
+      {
+        "executionId": "a86ce20e-6900-4114-ab5e-d97b83413150",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793151677992
+      },
+      {
+        "executionId": "9d9d8bd4-f5c2-40f1-8e82-218571d6afdc",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793153819262
+      },
+      {
+        "executionId": "9d9d8bd4-f5c2-40f1-8e82-218571d6afdc",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793154375838
+      }
+    ],
+    "2.11 Implementar la selección de Referencia_EMA": [
+      {
+        "executionId": "9d9d8bd4-f5c2-40f1-8e82-218571d6afdc",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793154386672
+      },
+      {
+        "executionId": "9d9d8bd4-f5c2-40f1-8e82-218571d6afdc",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793154862820
+      }
+    ],
+    "2.12 Implementar la revisión de referencia obsoleta": [
+      {
+        "executionId": "9d9d8bd4-f5c2-40f1-8e82-218571d6afdc",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793154867946
+      },
+      {
+        "executionId": "9d9d8bd4-f5c2-40f1-8e82-218571d6afdc",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793155174645
+      }
+    ],
+    "2.16 Implementar el primer registro sin persona vinculada (camino sin vínculo)": [
+      {
+        "executionId": "9d9d8bd4-f5c2-40f1-8e82-218571d6afdc",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793155180487
+      },
+      {
+        "executionId": "9d9d8bd4-f5c2-40f1-8e82-218571d6afdc",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793155492918
+      }
+    ],
+    "2.17 Implementar el flujo EMA de extremo a extremo": [
+      {
+        "executionId": "9d9d8bd4-f5c2-40f1-8e82-218571d6afdc",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793155499426
+      },
+      {
+        "executionId": "9d9d8bd4-f5c2-40f1-8e82-218571d6afdc",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793156027259
+      },
+      {
+        "executionId": "e491438e-6c3c-470a-a18e-feb582ad1dbc",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793157352907
+      },
+      {
+        "executionId": "e491438e-6c3c-470a-a18e-feb582ad1dbc",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793158462936
+      }
+    ],
+    "2. Recorrido EMA completo con dependencias mínimas": [
+      {
+        "executionId": "9d9d8bd4-f5c2-40f1-8e82-218571d6afdc",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793156027315
+      }
+    ]
+  }
+}
