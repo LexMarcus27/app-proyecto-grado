@@ -294,6 +294,243 @@
         "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
         "timestamp": 1793156027315
       }
+    ],
+    "3.1 Activación demo y enrutamiento por rol": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793567730295
+      },
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568434967
+      }
+    ],
+    "3.3 Implementar el onboarding del PCS": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568443839
+      },
+      {
+        "executionId": "15ec5355-2159-4570-b39d-73945e1c96b8",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793911739788
+      },
+      {
+        "executionId": "15ec5355-2159-4570-b39d-73945e1c96b8",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793912214567
+      }
+    ],
+    "3.4 Implementar el inicio del PCS (home hub de rol)": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568443938
+      },
+      {
+        "executionId": "9f3f646c-b412-4539-a857-3efaaf291096",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793929141483
+      },
+      {
+        "executionId": "9f3f646c-b412-4539-a857-3efaaf291096",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793930383148
+      }
+    ],
+    "3.5 Implementar el inicio del cuidador (home hub con gating)": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568444062
+      },
+      {
+        "executionId": "15ec5355-2159-4570-b39d-73945e1c96b8",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793912215571
+      },
+      {
+        "executionId": "15ec5355-2159-4570-b39d-73945e1c96b8",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793912578795
+      }
+    ],
+    "3.6 Cablear la lógica de autorización compartida (gating)": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568444176
+      },
+      {
+        "executionId": "15ec5355-2159-4570-b39d-73945e1c96b8",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793911370059
+      },
+      {
+        "executionId": "15ec5355-2159-4570-b39d-73945e1c96b8",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793911484947
+      }
+    ],
+    "3.8 Portar el dominio de métricas de red (metricsFor)": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568444285
+      },
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568546705
+      },
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568785015
+      }
+    ],
+    "3.11 Implementar la construcción del mapa de red (generador de nombres, evaluación y generateResults)": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568444340
+      },
+      {
+        "executionId": "9f3f646c-b412-4539-a857-3efaaf291096",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793929900017
+      },
+      {
+        "executionId": "9f3f646c-b412-4539-a857-3efaaf291096",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793930385005
+      }
+    ],
+    "3.12 Implementar el mapa de red completo y los gráficos": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568444402
+      }
+    ],
+    "3.13 Implementar el plan de seguridad": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568444471
+      },
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568789464
+      },
+      {
+        "executionId": "d61c0d5e-e939-45e3-b465-fe0104e34a00",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793836415063
+      }
+    ],
+    "3.15 Portar el dominio de mensajes de cuidado": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568444531
+      },
+      {
+        "executionId": "15ec5355-2159-4570-b39d-73945e1c96b8",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793911486129
+      },
+      {
+        "executionId": "15ec5355-2159-4570-b39d-73945e1c96b8",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793911739095
+      }
+    ],
+    "3.18 Implementar mensajes de cuidado y bandeja del PCS": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568444607
+      },
+      {
+        "executionId": "9f3f646c-b412-4539-a857-3efaaf291096",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793929343779
+      },
+      {
+        "executionId": "9f3f646c-b412-4539-a857-3efaaf291096",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793930386278
+      }
+    ],
+    "3.19 Implementar los recorridos del cuidador dependientes de asociación": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568444665
+      }
+    ],
+    "3.20 Portar el dominio de conexión e implementar \"Tejiendo vínculos\"": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568444720
+      },
+      {
+        "executionId": "15ec5355-2159-4570-b39d-73945e1c96b8",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793912580120
+      },
+      {
+        "executionId": "15ec5355-2159-4570-b39d-73945e1c96b8",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793912897159
+      }
+    ],
+    "3.23 Implementar evaluación de relación y preguntas para conectar": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568444777
+      }
+    ],
+    "3.25 Portar el dominio de notificaciones": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568444832
+      },
+      {
+        "executionId": "d61c0d5e-e939-45e3-b465-fe0104e34a00",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793836425918
+      },
+      {
+        "executionId": "d61c0d5e-e939-45e3-b465-fe0104e34a00",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793836545691
+      }
+    ],
+    "3.28 Implementar notificaciones simuladas y modo crisis/respiración": [
+      {
+        "executionId": "d08957ec-0b8d-46f1-a6fa-b5fcebdbec43",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793568444881
+      },
+      {
+        "executionId": "15ec5355-2159-4570-b39d-73945e1c96b8",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793912897828
+      },
+      {
+        "executionId": "15ec5355-2159-4570-b39d-73945e1c96b8",
+        "chatSessionId": "sess_923f079b-97f6-47a3-aeb1-5cf4f56149e9",
+        "timestamp": 1793913390715
+      }
     ]
   }
 }

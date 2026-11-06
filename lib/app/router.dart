@@ -1,4 +1,4 @@
-﻿import 'package:flutter/widgets.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -8,10 +8,21 @@ import '../presentation/ema/ema_flow_screen.dart';
 import '../presentation/ema/ema_reference_selection_screen.dart';
 import '../presentation/ema/ema_stale_reference_screen.dart';
 import '../presentation/demo/demo_scenario_controls_screen.dart';
+import '../presentation/caregiver/caregiver_home_screen.dart';
+import '../presentation/caring_messages/caring_compose_screen.dart';
+import '../presentation/caring_messages/caring_inbox_screen.dart';
+import '../presentation/connection/connection_hub_screen.dart';
+import '../presentation/crisis/breathing_screen.dart';
+import '../presentation/crisis/crisis_mode_screen.dart';
+import '../presentation/notifications/notifications_screen.dart';
+import '../presentation/network/network_builder_screen.dart';
 import '../presentation/network/network_map_screen.dart';
+import '../presentation/pcs_home/pcs_home_screen.dart';
+import '../presentation/onboarding/pcs_onboarding_screen.dart';
+import '../presentation/safety_plan/safety_plan_editor_screen.dart';
+import '../presentation/safety_plan/safety_plan_story_screen.dart';
 import '../presentation/shell/activation_screen.dart';
 import '../presentation/shell/component_gallery_screen.dart';
-import '../presentation/shell/placeholder_screen.dart';
 import '../presentation/shell/unsupported_role_screen.dart';
 import 'session_controller.dart';
 
@@ -44,6 +55,30 @@ abstract final class AppRoute {
 
   // Revisión de una Referencia_EMA obsoleta (PCS).
   static const emaStaleReference = 'ema-stale-reference';
+
+  // Relato del plan de seguridad (PCS).
+  static const safetyPlanStory = 'safety-plan-story';
+
+  // Editor del plan de seguridad (PCS).
+  static const safetyPlanEditor = 'safety-plan-editor';
+
+  // Bienvenida del onboarding del PCS (tarea 3.3).
+  static const pcsOnboarding = 'pcs-onboarding';
+
+  // Hub de conexión "Tejiendo vínculos" del PCS (tarea 3.20).
+  static const connectionHub = 'connection-hub';
+
+  // Notificaciones simuladas, modo crisis y respiración (tarea 3.28).
+  static const notifications = 'notifications';
+  static const crisisMode = 'crisis-mode';
+  static const breathing = 'breathing';
+
+  // Mensajes de cuidado (tarea 3.18).
+  static const caringInbox = 'caring-inbox';
+  static const caringCompose = 'caring-compose';
+
+  // Construcción del mapa de red (tarea 3.11).
+  static const networkBuilder = 'network-builder';
 }
 
 /// Paths asociados a cada ruta nombrada.
@@ -58,6 +93,16 @@ abstract final class AppPath {
   static const ema = '/ema';
   static const emaReference = '/ema/referencia';
   static const emaStaleReference = '/ema/revisar-referencia';
+  static const safetyPlanStory = '/plan-seguridad/relato';
+  static const safetyPlanEditor = '/plan-seguridad';
+  static const pcsOnboarding = '/pcs/onboarding';
+  static const connectionHub = '/tejiendo-vinculos';
+  static const notifications = '/notificaciones';
+  static const crisisMode = '/necesito-ayuda';
+  static const breathing = '/respiracion';
+  static const caringInbox = '/mensajes-de-cuidado';
+  static const caringCompose = '/mensajes-de-cuidado/redactar';
+  static const networkBuilder = '/mapa-red/construir';
 }
 
 /// Provider del `GoRouter` de la app.
@@ -104,30 +149,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         name: AppRoute.pcsHome,
         path: AppPath.pcsHome,
-        builder: (context, state) => PlaceholderScreen(
-          title: 'Inicio PCS',
-          // Entrada mínima y temporal al flujo EMA de extremo a extremo (tarea
-          // 2.17) mientras el home real del PCS (tarea 3.4) sigue pendiente.
-          actions: [
-            PlaceholderAction(
-              label: 'Ir a mi registro EMA',
-              onPressed: () => context.goNamed(AppRoute.ema),
-            ),
-            // Entrada visible al mapa mínimo para cambiar la persona de
-            // referencia activa (E2-03), conservando la confirmación explícita
-            // en el propio mapa. Temporal hasta el home real del PCS (tarea 3.4).
-            PlaceholderAction(
-              label: 'Ir a Tu mapa de red (cambiar persona de referencia)',
-              onPressed: () => context.goNamed(AppRoute.networkMap),
-            ),
-          ],
-        ),
+        builder: (context, state) => const PcsHomeScreen(),
       ),
       GoRoute(
         name: AppRoute.caregiverHome,
         path: AppPath.caregiverHome,
-        builder: (context, state) =>
-            const PlaceholderScreen(title: 'Inicio Cuidador'),
+        builder: (context, state) => const CaregiverHomeScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.networkBuilder,
+        path: AppPath.networkBuilder,
+        builder: (context, state) => const NetworkBuilderScreen(),
       ),
       GoRoute(
         name: AppRoute.networkMap,
@@ -148,6 +180,51 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: AppRoute.emaStaleReference,
         path: AppPath.emaStaleReference,
         builder: (context, state) => const EmaStaleReferenceScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.safetyPlanStory,
+        path: AppPath.safetyPlanStory,
+        builder: (context, state) => const SafetyPlanStoryScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.safetyPlanEditor,
+        path: AppPath.safetyPlanEditor,
+        builder: (context, state) => const SafetyPlanEditorScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.pcsOnboarding,
+        path: AppPath.pcsOnboarding,
+        builder: (context, state) => const PcsOnboardingScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.connectionHub,
+        path: AppPath.connectionHub,
+        builder: (context, state) => const ConnectionHubScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.notifications,
+        path: AppPath.notifications,
+        builder: (context, state) => const NotificationsScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.crisisMode,
+        path: AppPath.crisisMode,
+        builder: (context, state) => const CrisisModeScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.breathing,
+        path: AppPath.breathing,
+        builder: (context, state) => const BreathingScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.caringInbox,
+        path: AppPath.caringInbox,
+        builder: (context, state) => const CaringInboxScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.caringCompose,
+        path: AppPath.caringCompose,
+        builder: (context, state) => const CaringComposeScreen(),
       ),
     ],
   );
@@ -198,6 +275,11 @@ String? _guard(Session? session, String location) {
     return home;
   }
 
+  // La construcción del mapa de red es del PCS.
+  if (location == AppPath.networkBuilder && session.role != UserRole.pcs) {
+    return home;
+  }
+
   // El flujo EMA de extremo a extremo (registro diario) es una pantalla del
   // PCS. Un Cuidador no accede a él: se le redirige a su propio inicio.
   if (location == AppPath.ema && session.role != UserRole.pcs) {
@@ -213,6 +295,44 @@ String? _guard(Session? session, String location) {
   // La revisión de la Referencia_EMA obsoleta es una pantalla del PCS. Un
   // Cuidador no accede a ella: se le redirige a su propio inicio.
   if (location == AppPath.emaStaleReference && session.role != UserRole.pcs) {
+    return home;
+  }
+
+  // El plan de seguridad (relato y editor) es del PCS. Un Cuidador no accede;
+  // se le redirige a su propio inicio.
+  if ((location == AppPath.safetyPlanStory ||
+          location == AppPath.safetyPlanEditor) &&
+      session.role != UserRole.pcs) {
+    return home;
+  }
+
+  // El onboarding del PCS es del PCS. Un Cuidador no accede; va a su inicio.
+  if (location == AppPath.pcsOnboarding && session.role != UserRole.pcs) {
+    return home;
+  }
+
+  // El hub de conexión "Tejiendo vínculos" es del PCS. Un Cuidador no accede.
+  if (location == AppPath.connectionHub && session.role != UserRole.pcs) {
+    return home;
+  }
+
+  // Notificaciones, modo crisis y respiración son del PCS.
+  if ((location == AppPath.notifications ||
+          location == AppPath.crisisMode ||
+          location == AppPath.breathing) &&
+      session.role != UserRole.pcs) {
+    return home;
+  }
+
+  // La bandeja de mensajes de cuidado recibidos es del PCS. No exige una
+  // Asociacion_Activa para abrirse (Requirement 8.11), solo el rol PCS.
+  if (location == AppPath.caringInbox && session.role != UserRole.pcs) {
+    return home;
+  }
+
+  // La redacción de un mensaje de cuidado es del Cuidador.
+  if (location == AppPath.caringCompose &&
+      session.role != UserRole.cuidador) {
     return home;
   }
 
@@ -257,4 +377,3 @@ class _SessionRefreshListenable extends ChangeNotifier {
     super.dispose();
   }
 }
-

@@ -82,6 +82,16 @@ class DemoScenarioControlsScreen extends ConsumerWidget {
                       DemoScenario.withoutActiveLink,
                     ),
                   ),
+                  const SizedBox(height: 12),
+                  _ScenarioChoice(
+                    title: 'PCS nueva (onboarding no iniciado)',
+                    description:
+                        'Prepara una PCS sin mapa y con el onboarding sin '
+                        'iniciar para probar la bienvenida: "Construir mi mapa", '
+                        '"Hacerlo después" y la persistencia de la decisión.',
+                    selected: current == DemoScenario.freshPcsOnboarding,
+                    onSelect: () => _selectAndOpenOnboarding(context, ref),
+                  ),
                   const SizedBox(height: 24),
                   _Hint(
                     child: Text.rich(
@@ -123,6 +133,19 @@ class DemoScenarioControlsScreen extends ConsumerWidget {
   Future<void> _select(WidgetRef ref, DemoScenario scenario) async {
     await ref.read(demoScenarioControllerProvider.notifier).select(scenario);
     ref.invalidate(savedEmaReferenceProvider);
+  }
+
+  /// Prepara el escenario de PCS nueva (onboarding no iniciado) y abre la
+  /// bienvenida del PCS para poder comprobar "Construir mi mapa"/"Hacerlo
+  /// después" y la persistencia de la decisión (tarea 3.3). La construcción
+  /// completa del mapa sigue siendo de la Wave 12.
+  Future<void> _selectAndOpenOnboarding(
+    BuildContext context,
+    WidgetRef ref,
+  ) async {
+    await _select(ref, DemoScenario.freshPcsOnboarding);
+    if (!context.mounted) return;
+    context.goNamed(AppRoute.pcsOnboarding);
   }
 
   /// Vuelve a la pantalla anterior; si no hay nada que desapilar, va a la

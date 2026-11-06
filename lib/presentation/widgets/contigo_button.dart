@@ -81,13 +81,17 @@ class ContigoButton extends StatelessWidget {
           ),
           const SizedBox(width: 8),
         ],
-        Text(
-          label,
-          style: TextStyle(
-            color: style.foreground,
-            fontSize: fontSize,
-            fontWeight: FontWeight.w600,
-            height: 20 / fontSize,
+        Flexible(
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            softWrap: true,
+            style: TextStyle(
+              color: style.foreground,
+              fontSize: fontSize,
+              fontWeight: FontWeight.w600,
+              height: 1.25,
+            ),
           ),
         ),
       ],
@@ -102,7 +106,7 @@ class ContigoButton extends StatelessWidget {
           onTap: _disabled ? null : onPressed,
           borderRadius: BorderRadius.circular(12),
           child: Container(
-            height: height,
+            constraints: BoxConstraints(minHeight: height),
             width: fullWidth ? double.infinity : null,
             padding: padding,
             decoration: BoxDecoration(

@@ -1,7 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../data/auth/simulated_auth_service.dart';
+import '../data/caring_messages/in_memory_caring_message_repository.dart';
+import '../data/contacts/simulated_contacts_service.dart';
 import '../data/ema/in_memory_ema_draft_store.dart';
+import '../data/safety_plan/in_memory_safety_plan_store.dart';
 import '../data/ema/local_ema_reference_store.dart';
 import '../data/journey/local_journey_repository.dart';
 import '../domain/auth/auth_service.dart';
@@ -39,8 +43,12 @@ final sharedPreferencesProvider = Provider<SharedPreferences>(
 );
 
 /// Servicio de activación/login y resolución de rol.
+/// Por defecto construye la implementación simulada ([SimulatedAuthService],
+/// Capa_Simulada): código en mayúsculas, longitud mínima 4 y prefijo "C" para
+/// el Cuidador (Requirement 11). La etapa Firebase sustituye solo este provider
+/// con un override, sin tocar las pantallas.
 final authServiceProvider = Provider<AuthService>(
-  (ref) => throw UnimplementedError(_overrideMessage),
+  (ref) => SimulatedAuthService(),
 );
 
 /// Lectura/escritura del `JourneyState` (mapa de red, asociaciones).
@@ -69,14 +77,22 @@ final emaDraftStoreProvider = Provider<EmaDraftStore>(
   (ref) => InMemoryEmaDraftStore(),
 );
 
-/// `SafetyPlanDraft` (sesión).
+/// Borrador del plan de seguridad (sesión).
+///
+/// Por defecto construye la implementación en memoria
+/// ([InMemorySafetyPlanStore]): el borrador no se persiste y cada escenario
+/// demo mantiene el suyo de forma aislada (Requirement 7.1, 7.3, 7.5).
 final safetyPlanStoreProvider = Provider<SafetyPlanStore>(
-  (ref) => throw UnimplementedError(_overrideMessage),
+  (ref) => InMemorySafetyPlanStore(),
 );
 
 /// Registro/bandeja de mensajes de cuidado.
+///
+/// Por defecto construye la implementación en memoria
+/// ([InMemoryCaringMessageRepository]): los mensajes simulados viven solo en la
+/// sesión. La etapa Firebase sustituye solo este provider con un override.
 final caringMessageRepositoryProvider = Provider<CaringMessageRepository>(
-  (ref) => throw UnimplementedError(_overrideMessage),
+  (ref) => InMemoryCaringMessageRepository(),
 );
 
 /// Envío de mensajes/invitaciones (simulado).
@@ -90,6 +106,10 @@ final notificationServiceProvider = Provider<NotificationService>(
 );
 
 /// Importación de contactos del SO (simulado).
+///
+/// Por defecto construye la implementación simulada
+/// ([SimulatedContactsService]): permisos fingidos y contacto ficticio, sin
+/// acceder a contactos reales (Requirement 7.4).
 final contactsServiceProvider = Provider<ContactsService>(
-  (ref) => throw UnimplementedError(_overrideMessage),
+  (ref) => SimulatedContactsService(),
 );

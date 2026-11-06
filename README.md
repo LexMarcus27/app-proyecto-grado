@@ -1,5 +1,7 @@
 # Contigo
 
+**Avance de desarrollo: Wave 12 implementada; verificación pendiente.**
+
 App móvil Flutter de apoyo en salud mental para personas con conducta suicida
 (PCS) y sus cuidadores, migrada desde el prototipo web "Contigo" (React/Vite).
 Cubre los roles PCS y Cuidador y respeta los textos, el estilo visual y los
@@ -37,34 +39,35 @@ sobre su eje de peso. Las licencias y la atribución de origen están en
 ningún paso manual de fuentes pendiente: los binarios ya están incluidos en el
 repositorio.
 
-## Estado: Etapa 1 completa
+## Estado del desarrollo y verificación
 
-La Etapa 1 (base del proyecto y estilo visual) está completa. Funciona:
+Actualizado el 5 de noviembre de 2026.
 
-- Proyecto Flutter con la estructura de capas `domain / data / presentation /
-  app / content` y dependencias base (Riverpod, go_router, equatable,
-  shared_preferences).
-- App shell con `ProviderScope` y `go_router`: rutas nombradas y guardas por rol
-  (PCS/Cuidador), negando acceso a roles no soportados.
-- Tema portado del prototipo (`ContigoTheme.light()`) cableado en la app:
-  paleta, tipografía (Inter + Lora) y contraste WCAG ≥ 4.5:1 de las tarjetas de
-  notificación.
-- Componentes de UI reutilizables (StatusBar, botones, tarjetas, CompanionNote,
-  indicador de simulación). CompanionNote recorta el sprite correcto del avatar
-  con un `CustomPainter` reproduciendo el recorte CSS del prototipo.
-- Scaffold de carga de Contenido_Clínico verbatim con metadatos de estado de
-  validación por tipo de contenido.
-- Recursos multimedia del prototipo incorporados al bundle y expuestos por rutas
-  tipadas (`AppMedia`).
+**La última ola implementada, Wave 12 de la etapa 3, aún no está verificada.**
+Se publica como avance de desarrollo pendiente de revisión independiente y de
+comprobación manual en Android; no debe interpretarse como una versión aprobada.
 
-Pendiente (placeholder hasta etapas siguientes):
+| Bloque | Estado |
+| --- | --- |
+| Etapa 1: base y estilo | Implementada y revisada. |
+| Etapa 2: recorrido EMA | Implementada y verificada en los recorridos documentados de Android. |
+| Etapa 3, Wave 10: activación, métricas, plan y dominio de notificaciones | Comprobaciones funcionales realizadas; verificación Android con configuración gráfica temporal documentada. |
+| Etapa 3, Wave 11: onboarding, cuidador, autorización, conexión, mensajes y crisis/respiración | Comprobación manual solicitada completada en Android, incluidos los pendientes de bienvenida, contactos simulados y animación. |
+| Etapa 3, Wave 12: inicio PCS, construcción del mapa y mensajes/bandeja | Implementación reportada por Kiro; **revisión independiente y comprobación manual pendientes**. |
+| Waves 13–14 y etapa 4 (Firebase) | Pendientes según la especificación. |
 
-- **Etapa 2** — recorrido EMA completo de extremo a extremo con sus
-  dependencias mínimas (aún no implementado).
-- **Etapa 3** — demás módulos (activación, mapa de red y métricas, plan de
-  seguridad, mensajes de cuidado, conexión, notificaciones y modo crisis).
-- **Etapa 4** — integración con Firebase (autenticación real, persistencia y
-  reglas de seguridad del lado servidor).
+Kiro reportó análisis limpio y 275 pruebas aprobadas para Wave 12. Ese resultado
+no se ha reproducido como parte de este envío ni sustituye su verificación manual.
 
-Las pantallas de destino de las rutas son, en su mayoría, placeholders a la
-espera de las Etapas 2–3.
+Las revisiones manuales recientes utilizaron el emulador Android con SwiftShader,
+Vulkan desactivado e Impeller desactivado temporalmente, sin
+`--enable-software-rendering`. No se ha determinado la causa de los cierres
+históricos de QEMU ni se certifica estabilidad con Impeller o en iOS.
+
+Las funciones de envío, activación y comunicación conservan el carácter simulado
+definido por la especificación. Los destinos de olas posteriores y Firebase aún
+no están completos.
+
+Informes: [Wave 10](docs/verificacion/Verificacion_Etapa_3_Wave_10_Contigo.md)
+y [Wave 11](docs/verificacion/Verificacion_Etapa_3_Wave_11_Contigo.md).
+El plan detallado está en `.kiro/specs/contigo-flutter-migration/tasks.md`.

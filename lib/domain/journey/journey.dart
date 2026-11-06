@@ -12,6 +12,7 @@ export 'journey_authorization.dart';
 export 'journey_demo.dart';
 export 'journey_state.dart';
 export 'network_person.dart';
+export 'onboarding_logic.dart';
 export 'onboarding_status.dart';
 export 'person_status.dart';
 export 'relationship_type.dart';

@@ -4,6 +4,7 @@
 import 'package:contigo/app/app.dart';
 import 'package:contigo/app/di.dart';
 import 'package:contigo/app/router.dart';
+import 'package:contigo/data/auth/simulated_auth_service.dart';
 import 'package:contigo/data/ema/in_memory_ema_draft_store.dart';
 import 'package:contigo/data/ema/local_ema_reference_store.dart';
 import 'package:contigo/data/journey/local_journey_repository.dart';
@@ -50,6 +51,9 @@ Future<Fixture> start(WidgetTester tester, {bool twoActive = false}) async {
     questionIndex: 7,
   ));
   await tester.pumpWidget(ProviderScope(overrides: [
+    authServiceProvider.overrideWithValue(
+      SimulatedAuthService(verifyDelay: Duration.zero),
+    ),
     sharedPreferencesProvider.overrideWithValue(prefs),
     journeyRepositoryProvider.overrideWithValue(repo),
     emaReferenceStoreProvider.overrideWithValue(refs),
@@ -57,9 +61,11 @@ Future<Fixture> start(WidgetTester tester, {bool twoActive = false}) async {
   ], child: const ContigoApp()));
   await tester.pumpAndSettle();
   final container = ProviderScope.containerOf(tester.element(find.byType(ContigoApp)));
-  await tester.tap(find.text('Entrar como PCS'));
+  await tester.enterText(find.byType(TextField), 'A3K9X2');
+  await tester.pump();
+  await tester.tap(find.text('Continuar'));
   await tester.pumpAndSettle();
-  await tester.tap(find.text('Ir a mi registro EMA'));
+  await tester.tap(find.text('¿Cómo estoy hoy?'));
   await tester.pumpAndSettle();
   expect(find.text('Hilo 8 de 9'), findsOneWidget);
   return Fixture(prefs, repo, refs, drafts, container);
@@ -151,8 +157,8 @@ void main() {
       await tester.tap(find.byTooltip('Volver'));
       await tester.pumpAndSettle();
     }
-    if (find.text('Ir a mi registro EMA').evaluate().isNotEmpty) {
-      await clickText(tester, 'Ir a mi registro EMA');
+    if (find.text('¿Cómo estoy hoy?').evaluate().isNotEmpty) {
+      await clickText(tester, '¿Cómo estoy hoy?');
     }
     final after = (await f.drafts.loadTodayDraft())!;
     expect(after.reference!.personId, 'demo-carmen');

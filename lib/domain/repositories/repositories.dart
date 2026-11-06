@@ -13,6 +13,8 @@ library;
 
 import '../ema/ema_draft.dart';
 import '../ema/ema_reference.dart';
+import '../caring_messages/caring_message.dart';
+import '../safety_plan/safety_plan_draft.dart';
 import '../journey/care_association.dart';
 import '../journey/invitation_status.dart';
 import '../journey/journey_state.dart';
@@ -89,12 +91,45 @@ abstract class EmaDraftStore {
   Future<void> clear();
 }
 
-/// `SafetyPlanDraft`. Implementación inicial en memoria (sesión).
-abstract class SafetyPlanStore {}
+/// Borrador del plan de seguridad. Implementación inicial en memoria (sesión):
+/// el borrador y su contenido viven solo en la sesión y nunca se persisten en
+/// el almacenamiento local del PCS (Requirement 7.1, 7.5).
+///
+/// El almacén mantiene un borrador **por escenario de demostración** ([scenario]
+/// como clave): modificar el borrador de un escenario no altera los de los
+/// demás (aislamiento entre escenarios demo, Requirement 7.3).
+abstract class SafetyPlanStore {
+  /// Devuelve el borrador del [scenario] indicado, o `null` si aún no hay uno.
+  Future<SafetyPlanDraft?> loadDraft(String scenario);
 
-/// Registro/bandeja de mensajes de cuidado. Implementación inicial en memoria
-/// con envío fingido (Capa_Simulada).
-abstract class CaringMessageRepository {}
+  /// Conserva [draft] como el borrador del [scenario] indicado, sin afectar a
+  /// los demás escenarios y sin escribir en disco.
+  Future<void> saveDraft(String scenario, SafetyPlanDraft draft);
+
+  /// Descarta el borrador del [scenario] indicado.
+  Future<void> clear(String scenario);
+}
+
+/// Registro/bandeja de mensajes de cuidado (Capa_Simulada).
+///
+/// Implementación inicial en memoria con **envío fingido**: los mensajes
+/// "enviados" por el Cuidador se guardan solo en la sesión (se borran al
+/// recargar) y el PCS los lee desde su bandeja. El registro conserva únicamente
+/// identificadores + texto + estado de entrega simulado; **nunca** incluye notas
+/// privadas ni las preguntas de reflexión (Requirement 8.5). La bandeja del PCS
+/// no exige una Asociacion_Activa para abrirse, pero solo muestra los mensajes
+/// cuyo vínculo sigue vigente (`visibleCaringMessages`, Requirement 8.6, 8.11).
+abstract class CaringMessageRepository {
+  /// Flujo en vivo de todos los mensajes simulados almacenados en la sesión.
+  Stream<List<SimulatedCaringMessage>> watchMessages();
+
+  /// Lista actual de mensajes simulados almacenados.
+  Future<List<SimulatedCaringMessage>> loadMessages();
+
+  /// Agrega (registra) un mensaje simulado "enviado" y lo emite por
+  /// [watchMessages].
+  Future<void> addMessage(SimulatedCaringMessage message);
+}
 
 /// Envío de mensajes/invitaciones. Implementación inicial no-op simulada
 /// (Capa_Simulada).
@@ -104,6 +139,19 @@ abstract class MessageSender {}
 /// externo (Capa_Simulada).
 abstract class NotificationService {}
 
-/// Importación de contactos del SO. Implementación inicial con flujo de
-/// permisos fingido (Capa_Simulada).
-abstract class ContactsService {}
+/// Importación de contactos del SO (Capa_Simulada).
+///
+/// Implementación inicial con flujo de **permisos fingido**: no accede a los
+/// contactos reales del dispositivo ni agrega ninguno real. Simula la concesión
+/// o el rechazo del permiso y, si se concede, devuelve un contacto ficticio
+/// para que el plan de seguridad ejercite la importación (Requirement 7.4). La
+/// pantalla que la usa muestra el indicador de simulación persistente.
+abstract class ContactsService {
+  /// Simula la solicitud de permiso de acceso a contactos. Devuelve `true` si
+  /// se "concede" el permiso. No toca contactos reales del dispositivo.
+  Future<bool> requestPermission();
+
+  /// Devuelve el/los contacto(s) ficticio(s) a importar cuando el permiso se
+  /// concede. Son datos de demostración, no contactos reales.
+  Future<List<SafetyPlanContact>> importContacts();
+}

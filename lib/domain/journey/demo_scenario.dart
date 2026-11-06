@@ -20,6 +20,13 @@ enum DemoScenario {
 
   /// Escenario sin ninguna persona vinculada activa.
   withoutActiveLink,
+
+  /// Escenario de **PCS nueva con onboarding no iniciado**: sin mapa y con el
+  /// recorrido de onboarding en `not-started`, para poder ejercitar la
+  /// bienvenida del PCS (3.3): "Construir mi mapa", "Hacerlo después" y la
+  /// persistencia de la decisión. La construcción completa del mapa es de la
+  /// Wave 12; aquí solo se prepara el estado inicial.
+  freshPcsOnboarding,
 }
 
 /// Semilla (`JourneyState`) para el [scenario] dado.
@@ -42,6 +49,11 @@ enum DemoScenario {
 ///   refleja mejor el caso real de una referencia que quedó obsoleta.
 JourneyState seedForScenario(DemoScenario scenario) {
   switch (scenario) {
+    case DemoScenario.freshPcsOnboarding:
+      // PCS nueva: recorrido vacío, onboarding en "not-started" y sin mapa.
+      // Es exactamente el estado inicial (emptyJourney), que dispara la
+      // bienvenida del onboarding (shouldShowOnboardingWelcome == true).
+      return emptyJourney;
     case DemoScenario.withActiveLink:
       return createDemoJourney();
     case DemoScenario.withoutActiveLink:
