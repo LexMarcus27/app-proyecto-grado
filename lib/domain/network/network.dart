@@ -4,3 +4,4 @@
 library;
 
 export 'network_builder.dart';
+export 'network_invitation.dart';

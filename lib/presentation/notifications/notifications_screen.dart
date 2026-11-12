@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/di.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../../domain/notifications/notifications.dart';
@@ -143,11 +144,39 @@ class NotificationsScreen extends ConsumerWidget {
       );
       return;
     }
+
+    // Acción `questions`: abre el recorrido conversacional del PCS conservando
+    // la pregunta y la persona de la notificación (MobileScreen14).
+    if (notification.template.action == NotificationAction.questions) {
+      _openQuestions(context, ref, personId, notification.template.question);
+      return;
+    }
+
     _showPending(
       context,
       'Herramienta en preparación',
       'Esta herramienta de conexión se completa en las pantallas dirigidas a '
           'la persona, disponibles en una etapa posterior.',
+    );
+  }
+
+  /// Fija la persona interlocutora (la de la notificación) y abre las preguntas
+  /// para conectar del PCS posicionadas en [question].
+  Future<void> _openQuestions(
+    BuildContext context,
+    WidgetRef ref,
+    String personId,
+    String? question,
+  ) async {
+    final repo = ref.read(journeyRepositoryProvider);
+    final journey = await repo.loadJourney();
+    if (journey.selectedPersonId != personId) {
+      await repo.save(journey.copyWith(selectedPersonId: personId));
+    }
+    if (!context.mounted) return;
+    context.goNamed(
+      AppRoute.pcsConnectionQuestions,
+      queryParameters: question == null ? const {} : {'q': question},
     );
   }
 

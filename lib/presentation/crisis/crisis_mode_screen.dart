@@ -42,7 +42,7 @@ class _CrisisModeScreenState extends ConsumerState<CrisisModeScreen> {
           children: [
             // Barra superior mínima: salir + paso.
             Container(
-              color: ContigoColors.surface,
+              color: ContigoColors.canvas,
               padding: const EdgeInsets.fromLTRB(16, 12, 20, 12),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -135,7 +135,7 @@ class _CrisisModeScreenState extends ConsumerState<CrisisModeScreen> {
             ),
             // Acciones persistentes de emergencia (simuladas).
             Container(
-              color: ContigoColors.surface,
+              color: ContigoColors.canvas,
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
               child: Column(
                 children: [
@@ -145,38 +145,32 @@ class _CrisisModeScreenState extends ConsumerState<CrisisModeScreen> {
                         .copyWith(color: ContigoColors.inkMuted),
                   ),
                   const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ContigoButton(
-                          label: 'Mamá',
-                          variant: ContigoButtonVariant.secondary,
-                          small: true,
-                          fullWidth: true,
-                          onPressed: () => _showContactOptions(context),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ContigoButton(
-                          label: 'Línea ayuda',
-                          variant: ContigoButtonVariant.secondary,
-                          small: true,
-                          fullWidth: true,
-                          onPressed: () => _showHelpLine(context),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: ContigoButton(
-                          label: 'Emergencias',
-                          variant: ContigoButtonVariant.critical,
-                          small: true,
-                          fullWidth: true,
-                          onPressed: () => _showEmergency(context),
-                        ),
-                      ),
-                    ],
+                  // Acciones apiladas a lo ancho completo: así cada etiqueta
+                  // ("Mamá", "Línea ayuda", "Emergencias") se lee como palabra
+                  // completa al ancho del teléfono, sin partirse ni reducir la
+                  // letra. Las acciones son simuladas (no llaman ni envían).
+                  ContigoButton(
+                    label: 'Mamá',
+                    variant: ContigoButtonVariant.secondary,
+                    small: true,
+                    fullWidth: true,
+                    onPressed: () => _showContactOptions(context),
+                  ),
+                  const SizedBox(height: 8),
+                  ContigoButton(
+                    label: 'Línea ayuda',
+                    variant: ContigoButtonVariant.secondary,
+                    small: true,
+                    fullWidth: true,
+                    onPressed: () => _showHelpLine(context),
+                  ),
+                  const SizedBox(height: 8),
+                  ContigoButton(
+                    label: 'Emergencias',
+                    variant: ContigoButtonVariant.critical,
+                    small: true,
+                    fullWidth: true,
+                    onPressed: () => _showEmergency(context),
                   ),
                 ],
               ),

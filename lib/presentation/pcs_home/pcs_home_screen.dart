@@ -126,15 +126,37 @@ class _HomeBody extends ConsumerWidget {
           ),
           _HomeTile(
             title: '¿En dónde tejer?',
-            description: 'Relaciones para conectar',
+            description: journey.mapGenerated
+                ? 'Relaciones para conectar'
+                : 'Construye tu mapa de red',
             icon: Icons.hub_outlined,
-            onTap: () => context.goNamed(AppRoute.networkMap),
+            // Si el mapa aún no se ha generado (p. ej. tras aplazar la
+            // bienvenida o salir del constructor), este acceso permite
+            // empezar o retomar la construcción, conservando lo diligenciado.
+            // Con el mapa ya generado, abre "Tu mapa de red".
+            onTap: () => context.goNamed(
+              journey.mapGenerated
+                  ? AppRoute.networkMap
+                  : AppRoute.networkBuilder,
+            ),
           ),
           _HomeTile(
             title: 'Tejiendo vínculos',
             description: 'Cuida tus relaciones',
             icon: Icons.link,
             onTap: () => context.goNamed(AppRoute.connectionHub),
+          ),
+          _HomeTile(
+            title: 'Preguntas para conectar',
+            description: 'Comparte preguntas con una persona cercana vinculada',
+            icon: Icons.forum_outlined,
+            onTap: () => context.goNamed(AppRoute.pcsConnectionQuestions),
+          ),
+          _HomeTile(
+            title: 'Evaluar una relación',
+            description: 'Responde nueve preguntas y decide a quién invitar',
+            icon: Icons.favorite_outline,
+            onTap: () => context.goNamed(AppRoute.relationEvaluation),
           ),
           _HomeTile(
             title: 'Mensajes de cuidado',

@@ -82,10 +82,7 @@ class CaregiverHomeScreen extends ConsumerWidget {
                     subtitle: 'Qué puedo hacer en una crisis',
                     icon: Icons.favorite_border,
                     enabled: linked,
-                    onTap: () => _openPending(
-                      context,
-                      'Plan de acompañamiento',
-                    ),
+                    onTap: () => context.goNamed(AppRoute.caregiverSupportPlan),
                   ),
                   _CaregiverTile(
                     title: 'Tejiendo vínculos',
@@ -93,7 +90,8 @@ class CaregiverHomeScreen extends ConsumerWidget {
                     icon: Icons.link,
                     enabled: linked,
                     // Con vínculo activo abre la redacción de un mensaje para
-                    // tejer cercanía (tarea 3.18).
+                    // tejer cercanía (tarea 3.18); desde ahí se alcanzan las
+                    // preguntas para conectar y el registro de encuentro (3.19).
                     onTap: () => context.goNamed(AppRoute.caringCompose),
                   ),
                   _CaregiverTile(
@@ -103,15 +101,23 @@ class CaregiverHomeScreen extends ConsumerWidget {
                     subtitle: 'Registra cómo está la relación',
                     icon: Icons.insights_outlined,
                     enabled: linked,
-                    onTap: () => _openPending(
-                      context,
-                      'Registro de la relación',
-                    ),
+                    onTap: () => context.goNamed(AppRoute.caregiverLinkCheckIn),
                   ),
                   const SizedBox(height: 20),
                   const Divider(height: 1),
                   const SizedBox(height: 16),
                   _CaregiverDemoPanel(),
+                  const SizedBox(height: 12),
+                  // Acceso visible a los controles de demostración (incluye el
+                  // conmutador de rol PCS/Cuidador), para recorrer el flujo
+                  // Cuidador -> envío simulado -> PCS -> bandeja sin reiniciar.
+                  Center(
+                    child: TextButton(
+                      onPressed: () =>
+                          context.goNamed(AppRoute.demoControls),
+                      child: const Text('Controles de demostración'),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -216,46 +222,6 @@ class CaregiverHomeScreen extends ConsumerWidget {
   }
 
   /// Explicación temporal para los recorridos del cuidador cuyas pantallas
-  /// destino llegan en una ola posterior (Wave 13: plan de acompañamiento,
-  /// registro de vínculo y evaluación de la relación). Evita un callback vacío.
-  void _openPending(BuildContext context, String title) {
-    showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        final textTheme = Theme.of(sheetContext).textTheme;
-        return Padding(
-          padding: EdgeInsets.fromLTRB(
-            20,
-            0,
-            20,
-            24 + MediaQuery.of(sheetContext).viewInsets.bottom,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(title, style: textTheme.titleLarge),
-              const SizedBox(height: 12),
-              Text(
-                'Esta sección estará disponible en una etapa posterior. Ya puedes '
-                'explorar los recursos de aprendizaje mientras tanto.',
-                style: textTheme.bodyMedium,
-              ),
-              const SizedBox(height: 16),
-              ContigoButton(
-                label: 'Volver',
-                variant: ContigoButtonVariant.secondary,
-                fullWidth: true,
-                onPressed: () => Navigator.of(sheetContext).pop(),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
 }
 
 /// Tarjeta del vínculo del cuidador con el PCS. Deshabilitada si no hay vínculo.

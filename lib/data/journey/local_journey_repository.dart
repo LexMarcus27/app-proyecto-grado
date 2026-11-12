@@ -51,6 +51,9 @@ class LocalJourneyRepository implements JourneyRepository {
   JourneyState? _current;
 
   @override
+  JourneyState? get currentOrNull => _current;
+
+  @override
   Stream<JourneyState> watchJourney() async* {
     final current = _current ??= await loadJourney();
     yield current;

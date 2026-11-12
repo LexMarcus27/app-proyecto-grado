@@ -1,4 +1,4 @@
-﻿import 'package:contigo/app/di.dart';
+import 'package:contigo/app/di.dart';
 import 'package:contigo/app/theme.dart';
 import 'package:contigo/domain/ema/ema.dart';
 import 'package:contigo/domain/journey/journey.dart';
@@ -17,6 +17,9 @@ class _FakeJourneyRepository implements JourneyRepository {
   _FakeJourneyRepository(this._journey);
 
   final JourneyState _journey;
+
+  @override
+  JourneyState? get currentOrNull => _journey;
 
   @override
   Stream<JourneyState> watchJourney() => Stream.value(_journey);

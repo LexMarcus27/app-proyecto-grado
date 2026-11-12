@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/router.dart';
 import '../../app/theme.dart';
+import '../../app/session_controller.dart';
 import '../../data/journey/demo_seeder.dart';
+import '../../domain/auth/session.dart';
+import '../../domain/auth/user_role.dart';
 import '../../domain/journey/demo_scenario.dart';
 import '../network/network_map_screen.dart';
 import '../widgets/widgets.dart';
@@ -93,6 +96,11 @@ class DemoScenarioControlsScreen extends ConsumerWidget {
                     onSelect: () => _selectAndOpenOnboarding(context, ref),
                   ),
                   const SizedBox(height: 24),
+                  _RoleSwitch(
+                    current: ref.watch(sessionControllerProvider)?.role,
+                    onSelect: (role) => _selectRole(ref, role),
+                  ),
+                  const SizedBox(height: 24),
                   _Hint(
                     child: Text.rich(
                       TextSpan(
@@ -133,6 +141,17 @@ class DemoScenarioControlsScreen extends ConsumerWidget {
   Future<void> _select(WidgetRef ref, DemoScenario scenario) async {
     await ref.read(demoScenarioControllerProvider.notifier).select(scenario);
     ref.invalidate(savedEmaReferenceProvider);
+  }
+
+  /// Cambia el rol de la sesión demo sin reiniciar la app, para poder recorrer
+  /// Cuidador -> envío simulado -> PCS -> bandeja. El router re-enruta al inicio
+  /// del rol elegido al observar el cambio de sesión. Los mensajes simulados no
+  /// se persisten (viven en la sesión del repositorio en memoria).
+  void _selectRole(WidgetRef ref, UserRole role) {
+    final userId = role == UserRole.cuidador ? 'demo-cuidador' : 'demo-pcs';
+    ref
+        .read(sessionControllerProvider.notifier)
+        .setSession(Session(userId: userId, role: role));
   }
 
   /// Prepara el escenario de PCS nueva (onboarding no iniciado) y abre la
@@ -287,6 +306,61 @@ class _Hint extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: child,
+    );
+  }
+}
+
+
+/// Conmutador de rol de la sesión demo (PCS / Cuidador) sin reiniciar la app.
+class _RoleSwitch extends StatelessWidget {
+  const _RoleSwitch({required this.current, required this.onSelect});
+
+  final UserRole? current;
+  final ValueChanged<UserRole> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Cambiar de rol (demo)', style: textTheme.titleMedium),
+        const SizedBox(height: 4),
+        Text(
+          'Cambia entre PCS y Cuidador sin reiniciar la app para recorrer '
+          'Cuidador → envío simulado → PCS → bandeja. Los mensajes simulados no '
+          'se guardan.',
+          style: (textTheme.bodySmall ?? const TextStyle()).copyWith(
+            color: ContigoColors.inkMuted,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: ContigoButton(
+                label: 'Entrar como PCS',
+                variant: current == UserRole.pcs
+                    ? ContigoButtonVariant.primary
+                    : ContigoButtonVariant.secondary,
+                fullWidth: true,
+                onPressed: () => onSelect(UserRole.pcs),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: ContigoButton(
+                label: 'Entrar como Cuidador',
+                variant: current == UserRole.cuidador
+                    ? ContigoButtonVariant.primary
+                    : ContigoButtonVariant.secondary,
+                fullWidth: true,
+                onPressed: () => onSelect(UserRole.cuidador),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }

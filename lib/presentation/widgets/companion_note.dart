@@ -1,4 +1,4 @@
-﻿import 'dart:ui' as ui;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -17,15 +17,36 @@ import '../../content/app_media.dart';
 /// El avatar es decorativo (`aria-hidden` en el prototipo); aquí se excluye de
 /// la semántica para que el lector de pantalla lea solo el contenido del
 /// mensaje.
+/// Expresiones del avatar del acompañante del prototipo (lámina de sprites):
+/// bienvenida, pensativa y afecto (`caring-avatar--welcome/--thoughtful/
+/// --affection`).
+enum CompanionExpression { welcome, thoughtful, affection }
 class CompanionNote extends StatelessWidget {
-  const CompanionNote({super.key, required this.child, this.affection = false});
+  const CompanionNote({
+    super.key,
+    required this.child,
+    this.affection = false,
+    this.expression,
+  });
 
   /// Contenido del mensaje mostrado dentro de la nube.
   final Widget child;
 
-  /// Variante de expresión del avatar. En el prototipo alterna entre la pose de
-  /// bienvenida (`welcome`) y la de afecto (`affection`).
+  /// Atajo histórico para la pose de afecto. Si [expression] no se indica,
+  /// `affection: true` equivale a [CompanionExpression.affection] y `false` a
+  /// [CompanionExpression.welcome]. Se conserva por compatibilidad.
   final bool affection;
+
+  /// Expresión del avatar del prototipo: bienvenida, pensativa (thoughtful) o
+  /// afecto. Si se indica, tiene prioridad sobre [affection]. Mantiene las tres
+  /// expresiones acordadas del prototipo.
+  final CompanionExpression? expression;
+
+  CompanionExpression get _expression =>
+      expression ??
+      (affection
+          ? CompanionExpression.affection
+          : CompanionExpression.welcome);
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +55,7 @@ class CompanionNote extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          ExcludeSemantics(child: _CompanionAvatar(affection: affection)),
+          ExcludeSemantics(child: _CompanionAvatar(expression: _expression)),
           const SizedBox(width: 9),
           Expanded(
             child: Container(
@@ -124,6 +145,18 @@ class _SpritePose {
     bgPosY: -13.2,
   );
 
+  /// Pose pensativa (`--thoughtful`): ventana 66×82; `background-size:
+  /// 376.6px 250.6px`; `background-position: -165.2px -12.6px` (de la lámina de
+  /// la burbuja del prototipo, `.caring-avatar--thoughtful`).
+  static const thoughtful = _SpritePose(
+    windowWidth: 66,
+    windowHeight: 82,
+    bgSizeWidth: 376.6,
+    bgSizeHeight: 250.6,
+    bgPosX: -165.2,
+    bgPosY: -12.6,
+  );
+
   final double windowWidth;
   final double windowHeight;
   final double bgSizeWidth;
@@ -154,9 +187,9 @@ class _SpritePose {
 /// sin distorsión (la relación de aspecto de cada sprite se respeta porque el
 /// recorte deriva de las mismas fórmulas del CSS).
 class _CompanionAvatar extends StatefulWidget {
-  const _CompanionAvatar({required this.affection});
+  const _CompanionAvatar({required this.expression});
 
-  final bool affection;
+  final CompanionExpression expression;
 
   @override
   State<_CompanionAvatar> createState() => _CompanionAvatarState();
@@ -167,8 +200,16 @@ class _CompanionAvatarState extends State<_CompanionAvatar> {
   ImageStreamListener? _listener;
   ui.Image? _image;
 
-  _SpritePose get _pose =>
-      widget.affection ? _SpritePose.affection : _SpritePose.welcome;
+  _SpritePose get _pose {
+    switch (widget.expression) {
+      case CompanionExpression.welcome:
+        return _SpritePose.welcome;
+      case CompanionExpression.thoughtful:
+        return _SpritePose.thoughtful;
+      case CompanionExpression.affection:
+        return _SpritePose.affection;
+    }
+  }
 
   @override
   void didChangeDependencies() {

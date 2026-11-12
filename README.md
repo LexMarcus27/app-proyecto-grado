@@ -1,6 +1,6 @@
 # Contigo
 
-**Avance de desarrollo: Wave 12 implementada; verificación pendiente.**
+**Avance de desarrollo: Waves 10–13 implementadas; verificaciones de los recorridos documentados en Android cerradas. Etapa 4 (Firebase) pendiente por decisión del usuario.**
 
 App móvil Flutter de apoyo en salud mental para personas con conducta suicida
 (PCS) y sus cuidadores, migrada desde el prototipo web "Contigo" (React/Vite).
@@ -41,11 +41,12 @@ repositorio.
 
 ## Estado del desarrollo y verificación
 
-Actualizado el 5 de noviembre de 2026.
+Actualizado el 12 de noviembre de 2026.
 
-**La última ola implementada, Wave 12 de la etapa 3, aún no está verificada.**
-Se publica como avance de desarrollo pendiente de revisión independiente y de
-comprobación manual en Android; no debe interpretarse como una versión aprobada.
+**Las Waves 10–13 están implementadas y sus verificaciones acordadas están cerradas en el alcance de los informes.** El cierre de Wave 13 no constituye una auditoría global de todas las tareas de la Etapa 3.
+La siguiente etapa (Firebase/Etapa 4) queda pendiente por decisión del equipo.
+Las funciones de envío, activación, invitaciones y notificaciones conservan su
+carácter simulado local definido por la especificación.
 
 | Bloque | Estado |
 | --- | --- |
@@ -53,21 +54,30 @@ comprobación manual en Android; no debe interpretarse como una versión aprobad
 | Etapa 2: recorrido EMA | Implementada y verificada en los recorridos documentados de Android. |
 | Etapa 3, Wave 10: activación, métricas, plan y dominio de notificaciones | Comprobaciones funcionales realizadas; verificación Android con configuración gráfica temporal documentada. |
 | Etapa 3, Wave 11: onboarding, cuidador, autorización, conexión, mensajes y crisis/respiración | Comprobación manual solicitada completada en Android, incluidos los pendientes de bienvenida, contactos simulados y animación. |
-| Etapa 3, Wave 12: inicio PCS, construcción del mapa y mensajes/bandeja | Implementación reportada por Kiro; **revisión independiente y comprobación manual pendientes**. |
-| Waves 13–14 y etapa 4 (Firebase) | Pendientes según la especificación. |
+| Etapa 3, Wave 12: inicio PCS, construcción del mapa y mensajes/bandeja | Implementada y verificada manualmente en Android. |
+| Etapa 3, Wave 13: mapa completo (3.12), recorridos del cuidador (3.19) y evaluación de relación (3.23) | Implementada y verificada manualmente en Android, incluidas las correcciones de la revisión. |
+| Tareas opcionales de la Etapa 3 (propiedades PBT y port de pruebas del prototipo) | No ejecutadas, según el plan. |
+| Etapa 4 (Firebase/Google Cloud) | Pendiente por decisión del equipo; no iniciada. |
 
-Kiro reportó análisis limpio y 275 pruebas aprobadas para Wave 12. Ese resultado
-no se ha reproducido como parte de este envío ni sustituye su verificación manual.
+El análisis estático (`flutter analyze`) está limpio y la suite de pruebas
+(`flutter test`) pasa con 358 pruebas en el último estado registrado de la
+Etapa 3. La verificación funcional de los recorridos documentados se confirmó en
+Android según los informes del equipo. En Wave 13, el aislamiento ante una asociación nueva con la misma persona se acredita mediante pruebas automatizadas; no se reprodujo manualmente. Al reentrar al constructor, el generador vuelve a 1/10, conservando las personas y sus respuestas.
 
 Las revisiones manuales recientes utilizaron el emulador Android con SwiftShader,
 Vulkan desactivado e Impeller desactivado temporalmente, sin
 `--enable-software-rendering`. No se ha determinado la causa de los cierres
 históricos de QEMU ni se certifica estabilidad con Impeller o en iOS.
 
-Las funciones de envío, activación y comunicación conservan el carácter simulado
-definido por la especificación. Los destinos de olas posteriores y Firebase aún
-no están completos.
+Las funciones de envío, activación, invitaciones y comunicación conservan el
+carácter simulado local definido por la especificación. La Etapa 4 (Firebase:
+autenticación real, persistencia en la nube y reglas de seguridad) no está
+implementada y queda pendiente por decisión del equipo; está diseñada para
+enchufarse sobreescribiendo los providers de Riverpod sin modificar las
+pantallas.
 
-Informes: [Wave 10](docs/verificacion/Verificacion_Etapa_3_Wave_10_Contigo.md)
-y [Wave 11](docs/verificacion/Verificacion_Etapa_3_Wave_11_Contigo.md).
-El plan detallado está en `.kiro/specs/contigo-flutter-migration/tasks.md`.
+Informes de verificación incluidos en el repositorio:
+[Wave 10](docs/verificacion/Verificacion_Etapa_3_Wave_10_Contigo.md) y
+[Wave 11](docs/verificacion/Verificacion_Etapa_3_Wave_11_Contigo.md). El cierre
+de las verificaciones manuales de las Waves 12 y 13 (y de sus correcciones) está
+registrado en el plan detallado, `.kiro/specs/contigo-flutter-migration/tasks.md`.

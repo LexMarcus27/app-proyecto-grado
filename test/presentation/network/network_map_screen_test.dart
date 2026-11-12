@@ -4,7 +4,6 @@ import 'package:contigo/domain/ema/ema.dart';
 import 'package:contigo/domain/journey/journey.dart';
 import 'package:contigo/domain/repositories/repositories.dart';
 import 'package:contigo/presentation/network/network_map_screen.dart';
-import 'package:contigo/presentation/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -18,6 +17,9 @@ class _FakeJourneyRepository implements JourneyRepository {
   _FakeJourneyRepository(this._journey);
 
   final JourneyState _journey;
+
+  @override
+  JourneyState? get currentOrNull => _journey;
 
   @override
   Stream<JourneyState> watchJourney() => Stream.value(_journey);
@@ -175,8 +177,11 @@ void main() {
     });
 
     testWidgets(
-      'sin vínculo activo muestra el estado vacío y no lista personas',
+      'mapa generado sin vínculo activo: no ofrece referencia pero sí el mapa',
       (tester) async {
+        // "Sin referencia EMA elegible" (distinto de "sin red"): el mapa está
+        // generado, así que se muestran los resultados; pero sin ninguna
+        // Asociacion_Activa no se ofrece seleccionar referencia EMA.
         final journey = seedForScenario(DemoScenario.withoutActiveLink);
         final store = _FakeEmaReferenceStore();
 
@@ -188,13 +193,32 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(
-          find.text('Aún no tienes personas cercanas vinculadas'),
-          findsOneWidget,
-        );
-        // Ninguna acción de selección aparece en el estado vacío.
+        // El mapa (red generada) sí está disponible.
+        expect(find.text('Mapa de cercanía'), findsOneWidget);
+        expect(find.text('Sin persona de referencia elegible'), findsOneWidget);
+        // Sin asociación activa no hay acción de selección de referencia EMA.
         expect(find.text('Seleccionar para registro EMA'), findsNothing);
-        expect(find.byType(ContigoCard), findsNothing);
+        expect(store.saved, isEmpty);
+      },
+    );
+
+    testWidgets(
+      'sin red generada ofrece construir el mapa',
+      (tester) async {
+        // "Sin red": no hay mapa generado; se ofrece construirlo.
+        final store = _FakeEmaReferenceStore();
+
+        await tester.pumpWidget(
+          _host(
+            journeyRepository: _FakeJourneyRepository(emptyJourney),
+            referenceStore: store,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        expect(find.text('Tu mapa todavía no está generado'), findsOneWidget);
+        expect(find.text('Construir mi mapa'), findsOneWidget);
+        expect(find.text('Seleccionar para registro EMA'), findsNothing);
       },
     );
   });

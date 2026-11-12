@@ -17,6 +17,9 @@ class _FakeJourneyRepository implements JourneyRepository {
   final JourneyState _journey;
 
   @override
+  JourneyState? get currentOrNull => _journey;
+
+  @override
   Stream<JourneyState> watchJourney() => Stream.value(_journey);
 
   @override

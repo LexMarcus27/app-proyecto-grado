@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 
 import 'package:contigo/app/di.dart';
 import 'package:contigo/app/theme.dart';
@@ -29,6 +29,9 @@ class _MutableJourneyRepository implements JourneyRepository {
     _journey = next;
     _controller.add(next);
   }
+
+  @override
+  JourneyState? get currentOrNull => _journey;
 
   @override
   Stream<JourneyState> watchJourney() async* {

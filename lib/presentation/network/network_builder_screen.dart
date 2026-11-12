@@ -10,15 +10,22 @@ import '../widgets/widgets.dart';
 import 'network_builder_controller.dart';
 import 'network_map_screen.dart';
 
-/// Construcción del mapa de red (tarea 3.11), portada del flujo de
-/// `src/screens/network.tsx` (generador de nombres, evaluación y
-/// `generateResults`).
+/// Etapas del constructor guiado del mapa de red (orden del prototipo
+/// `network.tsx`): generador de nombres, revisión de la lista, avance y
+/// caracterización por persona.
+enum _BuildStage { names, review, summary, characterize }
+
+/// Construcción guiada del mapa de red (tarea 3.11, corrección E3-W13-02),
+/// portada del flujo de `SocialNetworkScreen` (`src/screens/network.tsx`).
 ///
-/// Captura personas con las preguntas del generador de nombres, evalúa cada una
-/// con los 18 ítems de la relación y genera el mapa. El cómputo de resultados es
-/// una Funcion_Simulada, por lo que muestra el indicador de simulación. Si el
-/// mapa ya está generado, ofrece abrir "Tu mapa de red".
-class NetworkBuilderScreen extends ConsumerWidget {
+/// Reproduce el recorrido activo del prototipo: las **diez** preguntas del
+/// generador de nombres (una por pantalla, con omitir/continuar), la **revisión**
+/// de las personas capturadas (editar/eliminar) y la **caracterización por
+/// persona**, cuyo paso 1 de 19 es "¿Quién es {nombre} para ti?" (sin
+/// preseleccionar "Familia") seguido de los mismos 18 ítems. El avance se
+/// conserva (reanudación). Generar con al menos una relación completa sigue
+/// siendo válido. El cómputo de resultados es una Funcion_Simulada.
+class NetworkBuilderScreen extends ConsumerStatefulWidget {
   const NetworkBuilderScreen({super.key});
 
   static const FeatureLayerInfo featureLayer = FeatureLayerInfo(
@@ -30,7 +37,27 @@ class NetworkBuilderScreen extends ConsumerWidget {
   );
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<NetworkBuilderScreen> createState() =>
+      _NetworkBuilderScreenState();
+}
+
+class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
+  _BuildStage _stage = _BuildStage.names;
+  int _nameIndex = 0;
+  final TextEditingController _nameField = TextEditingController();
+
+  // Caracterización en curso.
+  String? _currentPersonId;
+  int _itemIndex = 0; // 0 = categoría (paso 1); 1..18 = ítems (pasos 2..19).
+
+  @override
+  void dispose() {
+    _nameField.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final journeyAsync = ref.watch(networkJourneyProvider);
 
@@ -49,146 +76,425 @@ class NetworkBuilderScreen extends ConsumerWidget {
                 child: Row(
                   children: [
                     IconButton(
-                      onPressed: () => context.goNamed(AppRoute.pcsHome),
+                      onPressed: () => _back(context),
                       icon: const Icon(Icons.arrow_back),
-                      tooltip: 'Volver al inicio',
+                      tooltip: 'Volver',
                     ),
                     Expanded(
-                      child: Text('Construir mi mapa', style: textTheme.titleLarge),
+                      child: Text(_title(journey), style: textTheme.titleLarge),
                     ),
                   ],
                 ),
               ),
               SimulationIndicator.forFeature(NetworkBuilderScreen.featureLayer),
-              Expanded(
-                child: _BuilderBody(journey: journey),
-              ),
+              Expanded(child: _buildStage(journey)),
             ],
           ),
         ),
       ),
     );
   }
-}
 
-class _BuilderBody extends ConsumerWidget {
-  const _BuilderBody({required this.journey});
+  String _title(JourneyState journey) {
+    switch (_stage) {
+      case _BuildStage.names:
+        return 'Conoce tu red';
+      case _BuildStage.review:
+        return 'Tu lista de personas';
+      case _BuildStage.summary:
+        return 'Avance de tu mapa';
+      case _BuildStage.characterize:
+        return 'Caracterizar relación';
+    }
+  }
 
-  final JourneyState journey;
+  void _back(BuildContext context) {
+    switch (_stage) {
+      case _BuildStage.names:
+        if (_nameIndex > 0) {
+          setState(() => _nameIndex -= 1);
+        } else {
+          context.goNamed(AppRoute.pcsHome);
+        }
+      case _BuildStage.review:
+        setState(() => _stage = _BuildStage.names);
+      case _BuildStage.summary:
+        setState(() => _stage = _BuildStage.review);
+      case _BuildStage.characterize:
+        if (_itemIndex > 0) {
+          setState(() => _itemIndex -= 1);
+        } else {
+          setState(() => _stage = _BuildStage.summary);
+        }
+    }
+  }
 
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget _buildStage(JourneyState journey) {
+    switch (_stage) {
+      case _BuildStage.names:
+        return _namesStage(journey);
+      case _BuildStage.review:
+        return _reviewStage(journey);
+      case _BuildStage.summary:
+        return _summaryStage(journey);
+      case _BuildStage.characterize:
+        return _characterizeStage(journey);
+    }
+  }
+
+  // ── Generador de nombres: 10 preguntas, una por pantalla ──────────────────
+
+  Widget _namesStage(JourneyState journey) {
     final textTheme = Theme.of(context).textTheme;
-    final assessed = assessedPeople(journey);
-
+    final total = nameGeneratorQuestions.length;
+    final isLast = _nameIndex == total - 1;
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (journey.mapGenerated) ...[
-            Text('Tu mapa ya está generado.', style: textTheme.titleSmall),
-            const SizedBox(height: 10),
-            ContigoButton(
-              label: 'Ir a Tu mapa de red',
-              fullWidth: true,
-              onPressed: () => context.goNamed(AppRoute.networkMap),
+          Text('Pregunta ${_nameIndex + 1} de $total',
+              style: (textTheme.bodySmall ?? const TextStyle())
+                  .copyWith(color: ContigoColors.inkMuted)),
+          const SizedBox(height: 8),
+          ContigoCard(
+            child: Text(nameGeneratorQuestions[_nameIndex],
+                style: textTheme.titleMedium),
+          ),
+          const SizedBox(height: 16),
+          if (journey.people.isNotEmpty) ...[
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final p in journey.people)
+                  Chip(
+                    label: Text(p.name),
+                    backgroundColor: ContigoColors.notifQuestionsBg,
+                  ),
+              ],
             ),
-            const SizedBox(height: 20),
-            const Divider(height: 1),
-            const SizedBox(height: 16),
+            const SizedBox(height: 12),
           ],
+          Text('Nombre, iniciales o apodo', style: textTheme.titleSmall),
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _nameField,
+                  decoration: const InputDecoration(
+                    filled: true,
+                    fillColor: ContigoColors.surface,
+                    hintText: 'Ej. Alex o M.',
+                    border: OutlineInputBorder(),
+                  ),
+                  onSubmitted: (_) => _addFromField(),
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconButton.filled(
+                onPressed: _addFromField,
+                icon: const Icon(Icons.add),
+                tooltip: 'Añadir esta persona',
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ContigoButton(
+            label: isLast ? 'Revisar mi lista' : 'Continuar',
+            fullWidth: true,
+            onPressed: () => _advanceName(isLast),
+          ),
+          const SizedBox(height: 8),
+          ContigoButton(
+            label: 'No se me ocurre nadie',
+            variant: ContigoButtonVariant.secondary,
+            fullWidth: true,
+            onPressed: () => _advanceName(isLast),
+          ),
+          const SizedBox(height: 8),
+          ContigoButton(
+            label: 'Omitir esta pregunta',
+            variant: ContigoButtonVariant.tertiary,
+            fullWidth: true,
+            onPressed: () => _advanceName(isLast),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _addFromField() async {
+    final name = _nameField.text.trim();
+    if (name.isEmpty) return;
+    _nameField.clear();
+    await ref.read(networkBuilderControllerProvider).addNamedPerson(name);
+  }
+
+  Future<void> _advanceName(bool isLast) async {
+    // Como el prototipo (`submitNameQuestion`): si hay un nombre escrito, se
+    // guarda antes de avanzar, sin exigir pulsar "+".
+    final name = _nameField.text.trim();
+    if (name.isNotEmpty) {
+      _nameField.clear();
+      await ref.read(networkBuilderControllerProvider).addNamedPerson(name);
+      if (!mounted) return;
+    }
+    if (isLast) {
+      setState(() => _stage = _BuildStage.review);
+    } else {
+      setState(() => _nameIndex += 1);
+    }
+  }
+
+  // ── Revisión de la lista ──────────────────────────────────────────────────
+
+  Widget _reviewStage(JourneyState journey) {
+    final textTheme = Theme.of(context).textTheme;
+    if (journey.people.isEmpty) {
+      return SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Tu lista todavía está vacía. Puedes volver y añadir a alguien '
+              'cuando quieras.',
+              style: textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            ContigoButton(
+              label: 'Volver a las preguntas',
+              variant: ContigoButtonVariant.secondary,
+              fullWidth: true,
+              onPressed: () => setState(() {
+                _nameIndex = 0;
+                _stage = _BuildStage.names;
+              }),
+            ),
+          ],
+        ),
+      );
+    }
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Las personas que forman tu red', style: textTheme.titleMedium),
+          const SizedBox(height: 6),
           Text(
-            'Reconoce a las personas de tu red respondiendo estas preguntas. '
-            'Puedes agregar a quienes aparezcan al pensarlas.',
-            style: textTheme.bodyMedium,
+            'Revisa los nombres antes de caracterizar cada relación. Puedes '
+            'cambiarlos por iniciales o apodos.',
+            style: (textTheme.bodySmall ?? const TextStyle())
+                .copyWith(color: ContigoColors.inkMuted),
           ),
           const SizedBox(height: 12),
-          // Preguntas del generador de nombres (verbatim, como guía).
-          for (final q in nameGeneratorQuestions)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 6, right: 8),
-                    child: Icon(Icons.circle, size: 6, color: ContigoColors.sage),
-                  ),
-                  Expanded(child: Text(q, style: textTheme.bodySmall)),
-                ],
-              ),
+          for (final person in journey.people)
+            _ReviewRow(
+              person: person,
+              onRename: (name) => ref
+                  .read(networkBuilderControllerProvider)
+                  .renamePerson(person.id, name),
+              onRemove: () => ref
+                  .read(networkBuilderControllerProvider)
+                  .removePerson(person.id),
             ),
           const SizedBox(height: 16),
           ContigoButton(
-            label: 'Agregar una persona',
+            label: 'Añadir a alguien más',
             variant: ContigoButtonVariant.secondary,
             fullWidth: true,
-            icon: const Icon(Icons.person_add_alt),
-            onPressed: () => _addPerson(context, ref),
+            onPressed: () => setState(() {
+              _nameIndex = nameGeneratorQuestions.length - 1;
+              _stage = _BuildStage.names;
+            }),
           ),
-          const SizedBox(height: 20),
-          Text('Personas en tu mapa', style: textTheme.titleMedium),
           const SizedBox(height: 8),
-          if (journey.people.isEmpty)
-            Text(
-              'Aún no has agregado personas.',
-              style: (textTheme.bodySmall ?? const TextStyle())
-                  .copyWith(color: ContigoColors.inkMuted),
-            )
-          else
-            for (final person in journey.people)
-              _PersonRow(
-                person: person,
-                onEvaluate: () => _evaluate(context, ref, person),
-              ),
+          ContigoButton(
+            label: 'Continuar con la caracterización',
+            fullWidth: true,
+            onPressed: () => setState(() => _stage = _BuildStage.summary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Avance del mapa (elegir persona a caracterizar) ───────────────────────
+
+  Widget _summaryStage(JourneyState journey) {
+    final textTheme = Theme.of(context).textTheme;
+    final assessed = assessedPeople(journey);
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Elige una persona para continuar. No necesitas terminar todo en '
+            'una sola sesión.',
+            style: (textTheme.bodyMedium ?? const TextStyle())
+                .copyWith(color: ContigoColors.inkMuted),
+          ),
+          const SizedBox(height: 12),
+          for (final person in journey.people)
+            _SummaryRow(
+              person: person,
+              onTap: () => _startCharacterization(person),
+            ),
           const SizedBox(height: 20),
           const Divider(height: 1),
           const SizedBox(height: 16),
           ContigoButton(
             label: 'Generar mi mapa',
             fullWidth: true,
-            onPressed: assessed.isEmpty ? null : () => _generate(context, ref),
+            onPressed: assessed.isEmpty ? null : () => _generate(context),
           ),
           if (assessed.isEmpty) ...[
             const SizedBox(height: 8),
             Text(
-              'Evalúa al menos a una persona (sus 18 ítems) para generar el mapa.',
+              'Completa la caracterización de al menos una persona (sus 18 '
+              'ítems) para generar el mapa.',
               style: (textTheme.bodySmall ?? const TextStyle())
                   .copyWith(color: ContigoColors.inkMuted),
             ),
           ],
+          const SizedBox(height: 8),
+          ContigoButton(
+            label: 'Añadir o editar personas',
+            variant: ContigoButtonVariant.tertiary,
+            fullWidth: true,
+            onPressed: () => setState(() => _stage = _BuildStage.review),
+          ),
         ],
       ),
     );
   }
 
-  Future<void> _addPerson(BuildContext context, WidgetRef ref) async {
-    final result = await showModalBottomSheet<_NewPerson>(
-      context: context,
-      showDragHandle: true,
-      isScrollControlled: true,
-      builder: (sheetContext) => const _AddPersonSheet(),
-    );
-    if (result == null) return;
-    await ref
-        .read(networkBuilderControllerProvider)
-        .addPerson(result.name, result.type);
+  void _startCharacterization(NetworkPerson person) {
+    setState(() {
+      _currentPersonId = person.id;
+      // Reanuda: si ya tiene tipo, continúa por el primer ítem sin responder;
+      // si no, empieza por el paso 1 (categoría).
+      if (person.relationshipType == null) {
+        _itemIndex = 0;
+      } else {
+        final firstUnanswered = person.answers.indexWhere((a) => a == null);
+        _itemIndex = firstUnanswered < 0 ? 1 : firstUnanswered + 1;
+      }
+      _stage = _BuildStage.characterize;
+    });
   }
 
-  Future<void> _evaluate(
-    BuildContext context,
-    WidgetRef ref,
-    NetworkPerson person,
-  ) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => _EvaluationScreen(personId: person.id),
+  // ── Caracterización por persona: paso 1 categoría + 18 ítems ──────────────
+
+  Widget _characterizeStage(JourneyState journey) {
+    final textTheme = Theme.of(context).textTheme;
+    NetworkPerson? person;
+    for (final p in journey.people) {
+      if (p.id == _currentPersonId) {
+        person = p;
+        break;
+      }
+    }
+    if (person == null) {
+      return const Center(child: Text('Selecciona una persona.'));
+    }
+    final step = _itemIndex + 1; // 1..19
+    final progress = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Pregunta $step de 19',
+            style: (textTheme.bodySmall ?? const TextStyle())
+                .copyWith(color: ContigoColors.inkMuted)),
+        const SizedBox(height: 8),
+      ],
+    );
+
+    if (_itemIndex == 0) {
+      // Paso 1 de 19: ¿Quién es {nombre} para ti? (sin preselección).
+      return SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            progress,
+            ContigoCard(
+              child: Text('¿Quién es ${person.name} para ti?',
+                  style: textTheme.titleMedium),
+            ),
+            const SizedBox(height: 6),
+            Text('Elige el ámbito que mejor represente la relación actualmente.',
+                style: (textTheme.bodySmall ?? const TextStyle())
+                    .copyWith(color: ContigoColors.inkMuted)),
+            const SizedBox(height: 12),
+            for (final type in RelationshipType.values)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _CategoryOption(
+                  label: type.wireValue,
+                  // Sin preselección: solo marca la ya guardada (reanudación).
+                  selected: person.relationshipType == type,
+                  onTap: () => _selectCategory(person!.id, type),
+                ),
+              ),
+          ],
+        ),
+      );
+    }
+
+    // Pasos 2..19: los 18 ítems de la relación.
+    final itemIdx = _itemIndex - 1;
+    final selected = person.answers.length > itemIdx ? person.answers[itemIdx] : null;
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          progress,
+          ContigoCard(
+            child: Text(relationshipQuestions[itemIdx],
+                style: textTheme.titleMedium),
+          ),
+          const SizedBox(height: 12),
+          for (var i = 0; i < relationshipScale.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: _CategoryOption(
+                label: relationshipScale[i],
+                selected: selected == i + 1,
+                onTap: () => _answerItem(person!.id, itemIdx, i + 1),
+              ),
+            ),
+        ],
       ),
     );
   }
 
-  Future<void> _generate(BuildContext context, WidgetRef ref) async {
+  Future<void> _selectCategory(String personId, RelationshipType type) async {
+    await ref
+        .read(networkBuilderControllerProvider)
+        .setRelationshipType(personId, type);
+    if (!mounted) return;
+    setState(() => _itemIndex = 1); // avanza al primer ítem
+  }
+
+  Future<void> _answerItem(String personId, int itemIdx, int value) async {
+    await ref
+        .read(networkBuilderControllerProvider)
+        .answer(personId, itemIdx, value);
+    if (!mounted) return;
+    if (itemIdx < relationshipItemCount - 1) {
+      setState(() => _itemIndex += 1);
+    } else {
+      // Terminó los 18 ítems: vuelve al avance.
+      setState(() => _stage = _BuildStage.summary);
+    }
+  }
+
+  Future<void> _generate(BuildContext context) async {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -196,31 +502,34 @@ class _BuilderBody extends ConsumerWidget {
     );
     final ok = await ref.read(networkBuilderControllerProvider).generate();
     if (!context.mounted) return;
-    Navigator.of(context).pop(); // cierra el indicador
+    Navigator.of(context).pop();
     if (ok) context.goNamed(AppRoute.networkMap);
   }
 }
 
-class _NewPerson {
-  const _NewPerson(this.name, this.type);
-  final String name;
-  final RelationshipType type;
-}
-
-class _AddPersonSheet extends StatefulWidget {
-  const _AddPersonSheet();
+/// Fila de revisión: nombre editable y eliminar.
+class _ReviewRow extends StatefulWidget {
+  const _ReviewRow({
+    required this.person,
+    required this.onRename,
+    required this.onRemove,
+  });
+  final NetworkPerson person;
+  final ValueChanged<String> onRename;
+  final VoidCallback onRemove;
 
   @override
-  State<_AddPersonSheet> createState() => _AddPersonSheetState();
+  State<_ReviewRow> createState() => _ReviewRowState();
 }
 
-class _AddPersonSheetState extends State<_AddPersonSheet> {
-  final TextEditingController _name = TextEditingController();
-  RelationshipType _type = RelationshipType.familia;
+class _ReviewRowState extends State<_ReviewRow> {
+  bool _editing = false;
+  late final TextEditingController _c =
+      TextEditingController(text: widget.person.name);
 
   @override
   void dispose() {
-    _name.dispose();
+    _c.dispose();
     super.dispose();
   }
 
@@ -228,59 +537,70 @@ class _AddPersonSheetState extends State<_AddPersonSheet> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        20,
-        0,
-        20,
-        24 + MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text('Agregar una persona', style: textTheme.titleLarge),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _name,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Nombre',
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<RelationshipType>(
-            initialValue: _type,
-            decoration: const InputDecoration(
-              labelText: 'Tipo de relación',
-              border: OutlineInputBorder(),
-            ),
-            items: [
-              for (final t in RelationshipType.values)
-                DropdownMenuItem(value: t, child: Text(t.wireValue)),
-            ],
-            onChanged: (v) => setState(() => _type = v ?? _type),
-          ),
-          const SizedBox(height: 16),
-          ContigoButton(
-            label: 'Agregar',
-            fullWidth: true,
-            onPressed: () {
-              if (_name.text.trim().isEmpty) return;
-              Navigator.of(context).pop(_NewPerson(_name.text.trim(), _type));
-            },
-          ),
-        ],
+      padding: const EdgeInsets.only(bottom: 8),
+      child: ContigoCard(
+        child: _editing
+            ? Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _c,
+                      autofocus: true,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Guardar nombre',
+                    icon: const Icon(Icons.check, color: ContigoColors.sage),
+                    onPressed: () {
+                      widget.onRename(_c.text);
+                      setState(() => _editing = false);
+                    },
+                  ),
+                ],
+              )
+            : Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: ContigoColors.notifQuestionsBg,
+                    child: Text(
+                      widget.person.name.isNotEmpty
+                          ? widget.person.name.characters.first.toUpperCase()
+                          : '?',
+                      style: const TextStyle(color: ContigoColors.terracotta),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                      child:
+                          Text(widget.person.name, style: textTheme.titleSmall)),
+                  IconButton(
+                    tooltip: 'Editar ${widget.person.name}',
+                    icon: const Icon(Icons.edit_outlined,
+                        color: ContigoColors.terracotta),
+                    onPressed: () => setState(() => _editing = true),
+                  ),
+                  IconButton(
+                    tooltip: 'Eliminar ${widget.person.name}',
+                    icon: const Icon(Icons.close, color: ContigoColors.clay),
+                    onPressed: widget.onRemove,
+                  ),
+                ],
+              ),
       ),
     );
   }
 }
 
-class _PersonRow extends StatelessWidget {
-  const _PersonRow({required this.person, required this.onEvaluate});
-
+/// Fila de avance: persona con su tipo y estado de caracterización.
+class _SummaryRow extends StatelessWidget {
+  const _SummaryRow({required this.person, required this.onTap});
   final NetworkPerson person;
-  final VoidCallback onEvaluate;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -288,9 +608,9 @@ class _PersonRow extends StatelessWidget {
     final done = isPersonAssessed(person);
     final answered = person.answers.where((a) => a != null).length;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 9),
       child: ContigoCard(
-        onTap: onEvaluate,
+        onTap: onTap,
         child: Row(
           children: [
             CircleAvatar(
@@ -298,11 +618,9 @@ class _PersonRow extends StatelessWidget {
               backgroundColor: done
                   ? ContigoColors.notifReminderBg
                   : ContigoColors.notifQuestionsBg,
-              child: Icon(
-                done ? Icons.check : Icons.person,
-                color: done ? ContigoColors.sage : ContigoColors.terracotta,
-                size: 18,
-              ),
+              child: Icon(done ? Icons.check : Icons.person,
+                  color: done ? ContigoColors.sage : ContigoColors.terracotta,
+                  size: 18),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -311,16 +629,23 @@ class _PersonRow extends StatelessWidget {
                 children: [
                   Text(person.name, style: textTheme.titleSmall),
                   Text(
-                    done
-                        ? 'Evaluación completa'
-                        : 'Evaluación: $answered de $relationshipItemCount',
+                    person.relationshipType?.wireValue ??
+                        'Tipo de relación pendiente',
                     style: (textTheme.bodySmall ?? const TextStyle())
                         .copyWith(color: ContigoColors.inkMuted),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right, color: ContigoColors.inkMuted),
+            Text(
+              done
+                  ? 'Completa'
+                  : person.status == PersonStatus.inProgress
+                      ? 'En progreso ($answered/$relationshipItemCount)'
+                      : 'Pendiente',
+              style: (textTheme.labelMedium ?? const TextStyle())
+                  .copyWith(color: ContigoColors.inkMuted),
+            ),
           ],
         ),
       ),
@@ -328,62 +653,46 @@ class _PersonRow extends StatelessWidget {
   }
 }
 
-/// Cuestionario de evaluación de la relación (18 ítems en escala de 6 puntos).
-class _EvaluationScreen extends ConsumerStatefulWidget {
-  const _EvaluationScreen({required this.personId});
-
-  final String personId;
-
-  @override
-  ConsumerState<_EvaluationScreen> createState() => _EvaluationScreenState();
-}
-
-class _EvaluationScreenState extends ConsumerState<_EvaluationScreen> {
-  int _index = 0;
+/// Opción seleccionable (categoría o escala), con estado marcado.
+class _CategoryOption extends StatelessWidget {
+  const _CategoryOption({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final total = relationshipQuestions.length;
-    return Scaffold(
-      backgroundColor: ContigoColors.canvas,
-      appBar: AppBar(
-        title: Text('Ítem ${_index + 1} de $total'),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(relationshipQuestions[_index], style: textTheme.titleMedium),
-              const SizedBox(height: 16),
-              for (var i = 0; i < relationshipScale.length; i++)
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: ContigoButton(
-                    label: relationshipScale[i],
-                    variant: ContigoButtonVariant.secondary,
-                    fullWidth: true,
-                    onPressed: () => _answer(i + 1, total),
-                  ),
-                ),
-            ],
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 52),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color:
+              selected ? ContigoColors.notifQuestionsBg : ContigoColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected
+                ? ContigoColors.terracotta
+                : ContigoColors.notifMeetingBg,
+            width: 1.5,
+          ),
+        ),
+        alignment: Alignment.centerLeft,
+        child: Text(
+          label,
+          style: (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+            color: selected ? ContigoColors.terracotta : ContigoColors.ink,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
           ),
         ),
       ),
     );
-  }
-
-  Future<void> _answer(int value, int total) async {
-    await ref
-        .read(networkBuilderControllerProvider)
-        .answer(widget.personId, _index, value);
-    if (!mounted) return;
-    if (_index < total - 1) {
-      setState(() => _index += 1);
-    } else {
-      Navigator.of(context).pop();
-    }
   }
 }

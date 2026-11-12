@@ -35,6 +35,13 @@ abstract class JourneyRepository {
   /// recorrido vacío (`emptyJourney`).
   Future<JourneyState> loadJourney();
 
+  /// Último `JourneyState` conocido de forma **síncrona**, o `null` si aún no se
+  /// ha cargado. Permite resolver el contexto de cuidado (y por tanto la clave
+  /// de borrador por vínculo) sin esperar al `Stream`, incluso antes de que la
+  /// UI se suscriba. Las implementaciones que no cacheen en memoria devuelven
+  /// `null`.
+  JourneyState? get currentOrNull;
+
   /// Persiste el `JourneyState` completo y lo emite por [watchJourney].
   Future<void> save(JourneyState journey);
 

@@ -9,15 +9,18 @@ import '../presentation/ema/ema_reference_selection_screen.dart';
 import '../presentation/ema/ema_stale_reference_screen.dart';
 import '../presentation/demo/demo_scenario_controls_screen.dart';
 import '../presentation/caregiver/caregiver_home_screen.dart';
+import '../presentation/caregiver_journeys/caregiver_journey_screens.dart';
 import '../presentation/caring_messages/caring_compose_screen.dart';
 import '../presentation/caring_messages/caring_inbox_screen.dart';
 import '../presentation/connection/connection_hub_screen.dart';
+import '../presentation/connection/pcs_connection_questions_screen.dart';
 import '../presentation/crisis/breathing_screen.dart';
 import '../presentation/crisis/crisis_mode_screen.dart';
 import '../presentation/notifications/notifications_screen.dart';
 import '../presentation/network/network_builder_screen.dart';
 import '../presentation/network/network_map_screen.dart';
 import '../presentation/pcs_home/pcs_home_screen.dart';
+import '../presentation/relation_evaluation/relation_evaluation_screen.dart';
 import '../presentation/onboarding/pcs_onboarding_screen.dart';
 import '../presentation/safety_plan/safety_plan_editor_screen.dart';
 import '../presentation/safety_plan/safety_plan_story_screen.dart';
@@ -77,6 +80,19 @@ abstract final class AppRoute {
   static const caringInbox = 'caring-inbox';
   static const caringCompose = 'caring-compose';
 
+  // Recorridos del cuidador dependientes de asociación (tarea 3.19).
+  static const caregiverSupportPlan = 'caregiver-support-plan';
+  static const caregiverLinkCheckIn = 'caregiver-link-checkin';
+  static const caregiverEncounter = 'caregiver-encounter';
+  static const caregiverConnectionQuestions = 'caregiver-connection-questions';
+  static const caregiverIntimateMessage = 'caregiver-intimate-message';
+
+  // Preguntas para conectar conversacionales del PCS (tarea 3.19, MobileScreen14).
+  static const pcsConnectionQuestions = 'pcs-connection-questions';
+
+  // Evaluación de relación de nueve preguntas (tarea 3.23).
+  static const relationEvaluation = 'relation-evaluation';
+
   // Construcción del mapa de red (tarea 3.11).
   static const networkBuilder = 'network-builder';
 }
@@ -102,6 +118,13 @@ abstract final class AppPath {
   static const breathing = '/respiracion';
   static const caringInbox = '/mensajes-de-cuidado';
   static const caringCompose = '/mensajes-de-cuidado/redactar';
+  static const caregiverSupportPlan = '/cuidador/plan-acompanamiento';
+  static const caregiverLinkCheckIn = '/cuidador/registro-vinculo';
+  static const caregiverEncounter = '/cuidador/encuentro';
+  static const caregiverConnectionQuestions = '/cuidador/preguntas-conectar';
+  static const caregiverIntimateMessage = '/cuidador/mensaje-intimo';
+  static const pcsConnectionQuestions = '/preguntas-conectar';
+  static const relationEvaluation = '/evaluar-relacion';
   static const networkBuilder = '/mapa-red/construir';
 }
 
@@ -226,6 +249,43 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppPath.caringCompose,
         builder: (context, state) => const CaringComposeScreen(),
       ),
+      GoRoute(
+        name: AppRoute.pcsConnectionQuestions,
+        path: AppPath.pcsConnectionQuestions,
+        builder: (context, state) => PcsConnectionQuestionsScreen(
+          initialQuestion: state.uri.queryParameters['q'],
+        ),
+      ),
+      GoRoute(
+        name: AppRoute.relationEvaluation,
+        path: AppPath.relationEvaluation,
+        builder: (context, state) => const RelationEvaluationScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.caregiverSupportPlan,
+        path: AppPath.caregiverSupportPlan,
+        builder: (context, state) => const CaregiverSupportPlanScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.caregiverLinkCheckIn,
+        path: AppPath.caregiverLinkCheckIn,
+        builder: (context, state) => const CaregiverLinkCheckInScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.caregiverEncounter,
+        path: AppPath.caregiverEncounter,
+        builder: (context, state) => const CaregiverEncounterScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.caregiverConnectionQuestions,
+        path: AppPath.caregiverConnectionQuestions,
+        builder: (context, state) => const CaregiverConnectionQuestionsScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.caregiverIntimateMessage,
+        path: AppPath.caregiverIntimateMessage,
+        builder: (context, state) => const CaregiverIntimateMessageScreen(),
+      ),
     ],
   );
 });
@@ -324,6 +384,13 @@ String? _guard(Session? session, String location) {
     return home;
   }
 
+  // Las preguntas para conectar del PCS y la evaluación de relación son del PCS.
+  if ((location == AppPath.relationEvaluation ||
+          location == AppPath.pcsConnectionQuestions) &&
+      session.role != UserRole.pcs) {
+    return home;
+  }
+
   // La bandeja de mensajes de cuidado recibidos es del PCS. No exige una
   // Asociacion_Activa para abrirse (Requirement 8.11), solo el rol PCS.
   if (location == AppPath.caringInbox && session.role != UserRole.pcs) {
@@ -332,6 +399,16 @@ String? _guard(Session? session, String location) {
 
   // La redacción de un mensaje de cuidado es del Cuidador.
   if (location == AppPath.caringCompose &&
+      session.role != UserRole.cuidador) {
+    return home;
+  }
+
+  // Los recorridos del cuidador dependientes de asociación son del Cuidador.
+  if ((location == AppPath.caregiverSupportPlan ||
+          location == AppPath.caregiverLinkCheckIn ||
+          location == AppPath.caregiverEncounter ||
+          location == AppPath.caregiverConnectionQuestions ||
+          location == AppPath.caregiverIntimateMessage) &&
       session.role != UserRole.cuidador) {
     return home;
   }
