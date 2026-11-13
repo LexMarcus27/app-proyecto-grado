@@ -69,7 +69,7 @@ void main() {
     await tester.tap(find.byType(NotificationCard).first);
     await tester.pumpAndSettle();
     expect(
-      container.read(routerProvider).routeInformationProvider.value.uri.path,
+      container.read(routerProvider).state.uri.path,
       AppPath.connectionHub,
     );
   });

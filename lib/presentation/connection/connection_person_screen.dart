@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/navigation.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../../domain/connection/connection.dart';
@@ -145,7 +146,7 @@ class _NoAccessView extends ConsumerWidget {
                   onPressed: () async {
                     await selectConnectionPerson(ref, person.id);
                     if (!context.mounted) return;
-                    context.goNamed(
+                    context.pushReplacementNamed(
                       AppRoute.connectionPerson,
                       queryParameters: {'p': person.id},
                     );
@@ -172,14 +173,14 @@ class _NoAccessView extends ConsumerWidget {
               ContigoButton(
                 label: 'Ver mi red e invitaciones',
                 fullWidth: true,
-                onPressed: () => context.goNamed(AppRoute.networkMap),
+                onPressed: () => context.pushNamed(AppRoute.networkMap),
               ),
             const SizedBox(height: 9),
             ContigoButton(
               label: 'Volver a Tejiendo vínculos',
               variant: ContigoButtonVariant.secondary,
               fullWidth: true,
-              onPressed: () => context.goNamed(AppRoute.connectionHub),
+              onPressed: () => context.goBack(AppRoute.connectionHub),
             ),
           ],
         ),
@@ -652,7 +653,7 @@ class _ConnectionViewState extends State<_ConnectionView> {
                 child: IconButton(
                   tooltip: 'Volver a Tejiendo vínculos',
                   icon: const Icon(Icons.arrow_back, color: _brand),
-                  onPressed: () => context.goNamed(AppRoute.connectionHub),
+                  onPressed: () => context.goBack(AppRoute.connectionHub),
                 ),
               ),
             ),
@@ -687,7 +688,7 @@ class _ConnectionViewState extends State<_ConnectionView> {
                     icon: Icons.favorite_border,
                     title: 'Ver mensajes de cuidado',
                     subtitle: 'Vuelve a los mensajes que has recibido',
-                    onTap: () => context.goNamed(AppRoute.caringInbox),
+                    onTap: () => context.pushNamed(AppRoute.caringInbox),
                   ),
                   _RowCard(
                     semanticLabel: 'Llamar o enviar audio a $_recipient',
@@ -702,7 +703,7 @@ class _ConnectionViewState extends State<_ConnectionView> {
                     title: 'Preguntas para conectar',
                     subtitle: 'Un espacio de preguntas para conversar con '
                         '$_recipient y conocerse mejor',
-                    onTap: () => context.goNamed(AppRoute.pcsConnectionQuestions),
+                    onTap: () => context.pushNamed(AppRoute.pcsConnectionQuestions),
                   ),
                   _AssistantCard(
                     recipient: _recipient,
@@ -854,7 +855,7 @@ class _ConnectionViewState extends State<_ConnectionView> {
                       ),
                       textStyle: const TextStyle(fontFamily: ContigoTheme.bodyFontFamily, fontSize: 16),
                     ),
-                    onPressed: () => context.goNamed(AppRoute.connectionHub),
+                    onPressed: () => context.goBack(AppRoute.connectionHub),
                     icon: const Icon(Icons.close, size: 20),
                     label: const Text('Ahora no'),
                   ),

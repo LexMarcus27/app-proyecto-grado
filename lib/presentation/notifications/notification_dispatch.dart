@@ -38,7 +38,7 @@ Future<void> openDemoNotification(
   ref.read(notificationsControllerProvider.notifier).dismissVisible();
   final action = notification.template.action;
   if (action == NotificationAction.relationships) {
-    context.goNamed(AppRoute.connectionHub);
+    context.pushNamed(AppRoute.connectionHub);
     return;
   }
   final journey = ref.read(gatingJourneyProvider).value;
@@ -46,7 +46,7 @@ Future<void> openDemoNotification(
   if (personId == null ||
       journey == null ||
       !canStrengthenRelationship(journey, personId)) {
-    context.goNamed(AppRoute.connectionHub);
+    context.pushNamed(AppRoute.connectionHub);
     return;
   }
 
@@ -55,7 +55,7 @@ Future<void> openDemoNotification(
 
   if (action == NotificationAction.questions) {
     final question = notification.template.question;
-    context.goNamed(
+    context.pushNamed(
       AppRoute.pcsConnectionQuestions,
       queryParameters: question == null ? const {} : {'q': question},
     );
@@ -67,7 +67,7 @@ Future<void> openDemoNotification(
     NotificationAction.meeting => ConnectionAction.meeting,
     _ => ConnectionAction.message,
   };
-  context.goNamed(
+  context.pushNamed(
     AppRoute.connectionPerson,
     queryParameters: {'p': personId, 'a': connectionAction.wireValue},
   );

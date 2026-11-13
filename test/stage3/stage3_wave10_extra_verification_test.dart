@@ -188,7 +188,7 @@ void main() {
     await tester.tap(find.text('Construir mi plan para desenredar'));
     await tester.pumpAndSettle();
     expect(find.text('Mi plan de seguridad'), findsOneWidget);
-    expect(router.routeInformationProvider.value.uri.path, AppPath.safetyPlanEditor);
+    expect(router.state.uri.path, AppPath.safetyPlanEditor);
     expect(tester.takeException(), isNull);
   });
 

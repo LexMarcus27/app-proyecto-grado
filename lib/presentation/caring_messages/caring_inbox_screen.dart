@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
+import '../../app/navigation.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../../domain/caring_messages/caring_message.dart';
@@ -37,9 +37,9 @@ class CaringInboxScreen extends ConsumerWidget {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => context.goNamed(AppRoute.pcsHome),
+                    onPressed: () => context.goBack(AppRoute.pcsHome),
                     icon: const Icon(Icons.arrow_back),
-                    tooltip: 'Volver al inicio',
+                    tooltip: 'Volver',
                   ),
                   Expanded(
                     child: Text('Mensajes de cuidado', style: textTheme.titleLarge),
