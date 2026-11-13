@@ -150,7 +150,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 899));
     expect(find.text('Activa tu cuenta'), findsOneWidget);
     await tester.pumpAndSettle();
-    expect(find.text('Inicio Cuidador'), findsOneWidget);
+    expect(find.byKey(const Key('caregiver-home-title')), findsOneWidget);
   });
 
   testWidgets('relato: respaldo de video, siete páginas y entrada al editor', (tester) async {

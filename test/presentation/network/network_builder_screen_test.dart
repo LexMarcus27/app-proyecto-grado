@@ -57,6 +57,10 @@ void main() {
     addTearDown(c.dispose);
     await _pump(tester, c);
 
+    // Sin mapa empezado, el constructor abre la introducción (vista `intro`).
+    expect(find.text('Antes de empezar, construye tu mapa de red'), findsOneWidget);
+    expect(find.text('¿Por qué te preguntamos esto?'), findsOneWidget);
+    await _tap(tester, 'Construir mi mapa');
     expect(find.text('Pregunta 1 de 10'), findsOneWidget);
     expect(find.text(nameGeneratorQuestions.first), findsOneWidget);
 
@@ -97,13 +101,11 @@ void main() {
     addTearDown(c.dispose);
     await _pump(tester, c);
 
-    // Salta el generador: "Revisar mi lista" llega tras la última; avanzamos.
-    for (var i = 0; i < nameGeneratorQuestions.length; i++) {
-      final last = i == nameGeneratorQuestions.length - 1;
-      await _tap(tester, last ? 'Revisar mi lista' : 'Continuar');
-    }
-    await _tap(tester, 'Continuar con la caracterización');
+    // Con el mapa empezado, la entrada «progress» abre el avance.
     await _tap(tester, 'Alex');
+    // Sin tipo, primero la presentación de la persona (`person-intro`).
+    expect(find.text('Ahora veremos tu relación con Alex'), findsOneWidget);
+    await _tap(tester, 'Continuar');
 
     // Paso 1 de 19: la categoría.
     expect(find.text('Pregunta 1 de 19'), findsOneWidget);
@@ -116,6 +118,16 @@ void main() {
     // Paso 2 de 19: primer ítem de la relación.
     expect(find.text('Pregunta 2 de 19'), findsOneWidget);
     expect(find.text(relationshipQuestions.first), findsOneWidget);
+
+    // F09: tocar una opción solo la selecciona; avanza con «Continuar».
+    await _tap(tester, 'Nada');
+    expect(find.text('Pregunta 2 de 19'), findsOneWidget);
+    await _tap(tester, 'Extremadamente');
+    expect(find.text('Pregunta 2 de 19'), findsOneWidget);
+    await _tap(tester, 'Continuar');
+    expect(find.text('Pregunta 3 de 19'), findsOneWidget);
+    final journey = await c.read(journeyRepositoryProvider).loadJourney();
+    expect(journey.people.single.answers.first, 6);
   });
 
   testWidgets('el avance se conserva y se reanuda por persona', (tester) async {
@@ -140,11 +152,6 @@ void main() {
     addTearDown(c.dispose);
     await _pump(tester, c);
 
-    for (var i = 0; i < nameGeneratorQuestions.length; i++) {
-      final last = i == nameGeneratorQuestions.length - 1;
-      await _tap(tester, last ? 'Revisar mi lista' : 'Continuar');
-    }
-    await _tap(tester, 'Continuar con la caracterización');
     // En el avance, la persona figura "En progreso (2/18)".
     expect(find.textContaining('En progreso (2/18)'), findsOneWidget);
     await _tap(tester, 'Alex');

@@ -67,8 +67,25 @@ void main() {
     addTearDown(container.dispose);
     await _pump(tester, container);
 
-    // El paso inicial (message) es dirigido a persona: sin vínculo activo
-    // aparece el aviso y la acción primaria queda deshabilitada.
-    expect(find.text('Necesitas un vínculo activo'), findsWidgets);
+    // Como en el prototipo, el paso dirigido abre la selección de persona; sin
+    // vínculo activo, las acciones de la persona elegida quedan bloqueadas.
+    await tester.tap(find.text('Escribir mensaje'));
+    await tester.pumpAndSettle();
+    expect(find.text('¿Te serviría sentirte acompañada?'), findsOneWidget);
+    final chip = find.descendant(
+      of: find.bySemanticsLabel('Todas las personas de tu red'),
+      matching: find.byType(InkWell),
+    );
+    if (tester.any(chip)) {
+      await tester.tap(chip.first);
+      await tester.pumpAndSettle();
+      expect(find.textContaining('debe aceptar la invitación'), findsOneWidget);
+      await tester.tap(find.text('Mensaje para tejer cercanía'));
+      await tester.pumpAndSettle();
+      expect(
+        container.read(routerProvider).routeInformationProvider.value.uri.path,
+        AppPath.connectionHub,
+      );
+    }
   });
 }

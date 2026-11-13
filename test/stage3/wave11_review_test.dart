@@ -10,7 +10,6 @@ import 'package:contigo/domain/auth/session.dart';
 import 'package:contigo/domain/auth/user_role.dart';
 import 'package:contigo/domain/journey/journey.dart';
 import 'package:contigo/presentation/notifications/notification_card.dart';
-import 'package:contigo/presentation/widgets/widgets.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -79,9 +78,18 @@ void main() {
     await _pump(tester, c);
     c.read(routerProvider).go(AppPath.connectionHub);
     await tester.pumpAndSettle();
-    final card = tester.widget<ContigoCard>(find.ancestor(
-      of: find.text('Escribir mensaje para tejer cercanía'), matching: find.byType(ContigoCard)).first);
-    expect(card.onTap, isNull, reason: 'La accion dirigida debe quedar deshabilitada tambien en Otros pasos');
+    // «Otros pasos» abre la selección de persona; sin vínculo activo, la acción
+    // dirigida no abre la conexión con la persona.
+    await tester.tap(find.text('Escribir mensaje para tejer cercanía'));
+    await tester.pumpAndSettle();
+    expect(find.text('¿Te serviría sentirte acompañada?'), findsOneWidget);
+    final action = find.text('Mensaje para tejer cercanía');
+    if (tester.any(action)) {
+      await tester.tap(action);
+      await tester.pumpAndSettle();
+    }
+    expect(c.read(routerProvider).routeInformationProvider.value.uri.path,
+      AppPath.connectionHub, reason: 'La accion dirigida debe quedar deshabilitada tambien en Otros pasos');
   });
   testWidgets('Modo crisis conserva opciones de avance del prototipo', (tester) async {
     final c = await _container(createDemoJourney());

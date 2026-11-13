@@ -294,6 +294,7 @@ void main() {
 
         // Vista de resultado con el resumen 9 de 9.
         expect(find.text('Tu registro de hoy'), findsOneWidget);
+        await _expandEmaReview(tester);
         expect(find.text('9 de 9 hilos respondidos.'), findsOneWidget);
         expect(
           find.textContaining('Persona de referencia: M.'),
@@ -346,6 +347,7 @@ void main() {
           await _answerCurrentAndAdvance(tester);
         }
 
+        await _expandEmaReview(tester);
         expect(find.text('6 de 6 hilos respondidos.'), findsOneWidget);
         expect(
           find.text(
@@ -437,5 +439,11 @@ void main() {
   });
 }
 
-
-
+/// Despliega el resumen «Tu registro de hoy» del resultado del EMA.
+Future<void> _expandEmaReview(WidgetTester tester) async {
+  final review = find.text('Tu registro de hoy');
+  await tester.ensureVisible(review);
+  await tester.pumpAndSettle();
+  await tester.tap(review);
+  await tester.pumpAndSettle();
+}

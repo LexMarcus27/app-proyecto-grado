@@ -9,6 +9,7 @@ import '../../domain/ema/ema.dart';
 import '../../domain/journey/journey.dart';
 import '../../domain/metrics/metrics.dart';
 import '../../domain/network/network.dart';
+import '../connection/connection_selection.dart';
 import '../widgets/widgets.dart';
 import 'network_builder_controller.dart';
 import 'network_charts.dart';
@@ -791,6 +792,25 @@ class _PersonDetailSheet extends ConsumerWidget {
             ),
           ],
           const SizedBox(height: 16),
+          // «Fortalecer este vínculo» (F08): con vínculo activo abre la
+          // conexión con esta persona (M8).
+          if (linkedActive) ...[
+            ContigoButton(
+              label: 'Fortalecer este vínculo',
+              fullWidth: true,
+              onPressed: () async {
+                final router = GoRouter.of(context);
+                final navigator = Navigator.of(context);
+                await selectConnectionPerson(ref, personId);
+                navigator.pop();
+                router.goNamed(
+                  AppRoute.connectionPerson,
+                  queryParameters: {'p': personId},
+                );
+              },
+            ),
+            const SizedBox(height: 10),
+          ],
           // Selección de Referencia_EMA: solo con vínculo activo (una invitación
           // aceptada por sí sola no habilita esta acción).
           if (linkedActive) ...[
@@ -852,6 +872,22 @@ class _PersonDetailSheet extends ConsumerWidget {
               },
             ),
           ],
+          const SizedBox(height: 10),
+          // «Editar respuestas» (F08): revisa las respuestas de esta persona
+          // sin volver a pasar por las diez preguntas de nombres.
+          ContigoButton(
+            label: 'Editar respuestas',
+            variant: ContigoButtonVariant.secondary,
+            fullWidth: true,
+            onPressed: () {
+              final router = GoRouter.of(context);
+              Navigator.of(context).pop();
+              router.goNamed(
+                AppRoute.networkBuilder,
+                queryParameters: {'edit': personId},
+              );
+            },
+          ),
           const SizedBox(height: 10),
           ContigoButton(
             label: 'Cerrar',

@@ -65,7 +65,7 @@ class _SafetyPlanStoryScreenState extends ConsumerState<SafetyPlanStoryScreen> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
-                      onPressed: () => context.goNamed(AppRoute.pcsHome),
+                      onPressed: () => context.goNamed(AppRoute.helpHub),
                       icon: const Icon(Icons.arrow_back, size: 20),
                       label: const Text('Salir del recurso'),
                     ),

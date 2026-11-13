@@ -97,6 +97,7 @@ void main() {
     await repo.save(seed);
     await tester.pumpAndSettle();
     await _tapLabel(tester, 'Tejiendo vínculos');
+    await _tapLabel(tester, 'Escribir un mensaje de cuidado');
     await _tapLabel(tester, 'Crear un mensaje');
     await tester.enterText(find.byType(TextFormField), 'Mensaje ficticio A que estoy revisando');
     await tester.pumpAndSettle();

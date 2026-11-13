@@ -72,6 +72,7 @@ void main() {
     final c = await _container(emptyJourney);
     addTearDown(c.dispose);
     await _pump(tester, c, AppPath.networkBuilder);
+    await _tapLabel(tester, 'Construir mi mapa');
     await tester.enterText(find.byType(TextField), 'Nora Demo');
     await tester.pumpAndSettle();
     await _tapLabel(tester, 'Continuar');

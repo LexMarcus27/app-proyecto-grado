@@ -80,7 +80,7 @@ void main() {
     await tester.tap(find.text('Hacerlo después'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Inicio PCS'), findsOneWidget);
+    expect(find.byKey(const Key('pcs-home-title')), findsOneWidget);
     final journey =
         await container.read(journeyRepositoryProvider).loadJourney();
     expect(journey.onboardingStatus, OnboardingStatus.deferred);
@@ -101,6 +101,6 @@ void main() {
 
     // No muestra la bienvenida; ha redirigido al inicio del PCS.
     expect(find.text('Antes de empezar, reconoce tu red'), findsNothing);
-    expect(find.text('Inicio PCS'), findsOneWidget);
+    expect(find.byKey(const Key('pcs-home-title')), findsOneWidget);
   });
 }

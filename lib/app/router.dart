@@ -12,7 +12,11 @@ import '../presentation/caregiver/caregiver_home_screen.dart';
 import '../presentation/caregiver_journeys/caregiver_journey_screens.dart';
 import '../presentation/caring_messages/caring_compose_screen.dart';
 import '../presentation/caring_messages/caring_inbox_screen.dart';
+import '../presentation/caregiver/caregiver_views.dart';
 import '../presentation/connection/connection_hub_screen.dart';
+import '../presentation/connection/connection_person_screen.dart';
+import '../presentation/connection/connection_selection.dart';
+import '../presentation/help/help_hub_screen.dart';
 import '../presentation/connection/pcs_connection_questions_screen.dart';
 import '../presentation/crisis/breathing_screen.dart';
 import '../presentation/crisis/crisis_mode_screen.dart';
@@ -76,6 +80,17 @@ abstract final class AppRoute {
   static const crisisMode = 'crisis-mode';
   static const breathing = 'breathing';
 
+  // Centro "¿Qué necesitas ahora?" (M20, `HelpHubScreen`).
+  static const helpHub = 'help-hub';
+
+  // Vistas del cuidador de la navegación inferior (M22, M23, M24).
+  static const caregiverLearning = 'caregiver-learning';
+  static const caregiverConnections = 'caregiver-connections';
+  static const caregiverProfile = 'caregiver-profile';
+
+  // Conexión con una persona (M8) y selección de persona (M21) del PCS.
+  static const connectionPerson = 'connection-person';
+
   // Mensajes de cuidado (tarea 3.18).
   static const caringInbox = 'caring-inbox';
   static const caringCompose = 'caring-compose';
@@ -116,6 +131,11 @@ abstract final class AppPath {
   static const notifications = '/notificaciones';
   static const crisisMode = '/necesito-ayuda';
   static const breathing = '/respiracion';
+  static const helpHub = '/ayuda';
+  static const caregiverLearning = '/cuidador/aprender';
+  static const caregiverConnections = '/cuidador/vinculos';
+  static const caregiverProfile = '/cuidador/perfil';
+  static const connectionPerson = '/tejiendo-vinculos/persona';
   static const caringInbox = '/mensajes-de-cuidado';
   static const caringCompose = '/mensajes-de-cuidado/redactar';
   static const caregiverSupportPlan = '/cuidador/plan-acompanamiento';
@@ -182,7 +202,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         name: AppRoute.networkBuilder,
         path: AppPath.networkBuilder,
-        builder: (context, state) => const NetworkBuilderScreen(),
+        builder: (context, state) => NetworkBuilderScreen(
+          editPersonId: state.uri.queryParameters['edit'],
+        ),
       ),
       GoRoute(
         name: AppRoute.networkMap,
@@ -222,7 +244,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         name: AppRoute.connectionHub,
         path: AppPath.connectionHub,
-        builder: (context, state) => const ConnectionHubScreen(),
+        builder: (context, state) => ConnectionHubScreen(
+          initialStep: connectionStepFromQuery(state.uri.queryParameters['s']),
+        ),
       ),
       GoRoute(
         name: AppRoute.notifications,
@@ -233,6 +257,36 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: AppRoute.crisisMode,
         path: AppPath.crisisMode,
         builder: (context, state) => const CrisisModeScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.helpHub,
+        path: AppPath.helpHub,
+        builder: (context, state) => const HelpHubScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.connectionPerson,
+        path: AppPath.connectionPerson,
+        builder: (context, state) => ConnectionPersonScreen(
+          personId: state.uri.queryParameters['p'],
+          initialAction: connectionActionFromQuery(
+            state.uri.queryParameters['a'],
+          ),
+        ),
+      ),
+      GoRoute(
+        name: AppRoute.caregiverLearning,
+        path: AppPath.caregiverLearning,
+        builder: (context, state) => const CaregiverLearningScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.caregiverConnections,
+        path: AppPath.caregiverConnections,
+        builder: (context, state) => const CaregiverConnectionsScreen(),
+      ),
+      GoRoute(
+        name: AppRoute.caregiverProfile,
+        path: AppPath.caregiverProfile,
+        builder: (context, state) => const CaregiverProfileScreen(),
       ),
       GoRoute(
         name: AppRoute.breathing,
@@ -378,6 +432,8 @@ String? _guard(Session? session, String location) {
 
   // Notificaciones, modo crisis y respiración son del PCS.
   if ((location == AppPath.notifications ||
+          location == AppPath.helpHub ||
+          location == AppPath.connectionPerson ||
           location == AppPath.crisisMode ||
           location == AppPath.breathing) &&
       session.role != UserRole.pcs) {
@@ -405,6 +461,9 @@ String? _guard(Session? session, String location) {
 
   // Los recorridos del cuidador dependientes de asociación son del Cuidador.
   if ((location == AppPath.caregiverSupportPlan ||
+          location == AppPath.caregiverLearning ||
+          location == AppPath.caregiverConnections ||
+          location == AppPath.caregiverProfile ||
           location == AppPath.caregiverLinkCheckIn ||
           location == AppPath.caregiverEncounter ||
           location == AppPath.caregiverConnectionQuestions ||

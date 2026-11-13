@@ -67,9 +67,9 @@ class _EditorBody extends ConsumerWidget {
           child: Row(
             children: [
               IconButton(
-                onPressed: () => context.goNamed(AppRoute.pcsHome),
+                onPressed: () => context.goNamed(AppRoute.helpHub),
                 icon: const Icon(Icons.arrow_back),
-                tooltip: 'Volver',
+                tooltip: 'Volver a Necesito ayuda',
               ),
               Expanded(
                 child: Text('Mi plan de seguridad', style: textTheme.titleLarge),
@@ -201,7 +201,7 @@ class _EditorBody extends ConsumerWidget {
           child: ContigoButton(
             label: 'Usar mi plan ahora',
             fullWidth: true,
-            onPressed: () => context.goNamed(AppRoute.pcsHome),
+            onPressed: () => context.goNamed(AppRoute.crisisMode),
           ),
         ),
       ],

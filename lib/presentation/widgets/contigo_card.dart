@@ -27,7 +27,7 @@ class ContigoCard extends StatelessWidget {
     final decoration = BoxDecoration(
       color: ContigoColors.surface,
       borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: ContigoColors.notifQuestionsBg),
+      border: Border.all(color: ContigoColors.border),
       boxShadow: const [
         BoxShadow(
           color: Color(0x12_3A3238),
@@ -90,7 +90,7 @@ class ContigoActionCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: ContigoColors.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: ContigoColors.notifQuestionsBg),
+              border: Border.all(color: ContigoColors.border),
               boxShadow: const [
                 BoxShadow(
                   color: Color(0x12_3A3238),

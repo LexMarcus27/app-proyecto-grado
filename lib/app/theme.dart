@@ -39,6 +39,18 @@ class ContigoColors {
   /// Terracota primaria de acciones del PCS (`.pcs-primary #AA461D`).
   static const Color terracotta = Color(0xFFAA461D);
 
+  /// Rosa de marca del `Btn` general del prototipo (`C.brand = #A85550`).
+  static const Color brand = Color(0xFFA85550);
+
+  /// Fondo suave de marca (`C.brandSoft = #F2E3E0`).
+  static const Color brandSoft = Color(0xFFF2E3E0);
+
+  /// Rojo de las acciones críticas generales (`C.critical = #A3474A`).
+  static const Color critical = Color(0xFFA3474A);
+
+  /// Borde neutro habitual (`C.border = #DFD4C9`).
+  static const Color border = Color(0xFFDFD4C9);
+
   /// Violeta de navegación/enlaces del inicio (`#5D49A5`).
   static const Color violet = Color(0xFF5D49A5);
 
