@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/navigation.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../../domain/journey/caregiver.dart';
@@ -49,7 +50,7 @@ class _CaregiverGatedScaffold extends ConsumerWidget {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => context.goNamed(
+                    onPressed: () => context.goBack(
                       fromConnections
                           ? AppRoute.caregiverConnections
                           : AppRoute.caregiverHome,
@@ -383,7 +384,7 @@ class _LinkCheckInBodyState extends ConsumerState<_LinkCheckInBody> {
       content: Text('Registro de prueba completado. No se ha enviado.'),
     ));
     _returnTimer = Timer(const Duration(milliseconds: 2600), () {
-      if (mounted) context.goNamed(AppRoute.caregiverHome);
+      if (mounted) context.goBack(AppRoute.caregiverHome);
     });
   }
 
@@ -487,7 +488,7 @@ class _LinkCheckInBodyState extends ConsumerState<_LinkCheckInBody> {
             label: 'Completar después',
             variant: ContigoButtonVariant.tertiary,
             fullWidth: true,
-            onPressed: () => context.goNamed(AppRoute.caregiverHome),
+            onPressed: () => context.goBack(AppRoute.caregiverHome),
           ),
         ],
       ),

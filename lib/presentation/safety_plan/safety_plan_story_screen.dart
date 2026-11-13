@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/navigation.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../../content/safety_plan_story.dart';
@@ -65,7 +66,7 @@ class _SafetyPlanStoryScreenState extends ConsumerState<SafetyPlanStoryScreen> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: TextButton.icon(
-                      onPressed: () => context.goNamed(AppRoute.helpHub),
+                      onPressed: () => context.goBack(AppRoute.helpHub),
                       icon: const Icon(Icons.arrow_back, size: 20),
                       label: const Text('Salir del recurso'),
                     ),
@@ -170,7 +171,7 @@ class _SafetyPlanStoryScreenState extends ConsumerState<SafetyPlanStoryScreen> {
                           : 'Siguiente',
                       fullWidth: true,
                       onPressed: () => isLast
-                          ? context.goNamed(AppRoute.safetyPlanEditor)
+                          ? context.pushNamed(AppRoute.safetyPlanEditor)
                           : _goToPage(_pageIndex + 1),
                     ),
                   ),

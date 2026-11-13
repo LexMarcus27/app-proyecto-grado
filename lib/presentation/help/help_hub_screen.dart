@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/navigation.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../widgets/widgets.dart';
@@ -38,7 +39,7 @@ class HelpHubScreen extends StatelessWidget {
                 child: IconButton(
                   tooltip: 'Volver al inicio',
                   icon: const Icon(Icons.arrow_back, color: _brand),
-                  onPressed: () => context.goNamed(AppRoute.pcsHome),
+                  onPressed: () => context.goBack(AppRoute.pcsHome),
                 ),
               ),
             ),
@@ -66,21 +67,21 @@ class HelpHubScreen extends StatelessWidget {
               title: 'Ver plan de seguridad',
               description: 'Consulta o prepara tu plan, incluso sin conexión.',
               icon: Icons.shield_outlined,
-              onTap: () => context.goNamed(AppRoute.safetyPlanEditor),
+              onTap: () => context.pushNamed(AppRoute.safetyPlanEditor),
             ),
             _HelpOption(
               title: 'Necesito ayuda ahora',
               description: 'Abre el apoyo inmediato, paso a paso.',
               icon: Icons.support,
               urgent: true,
-              onTap: () => context.goNamed(AppRoute.crisisMode),
+              onTap: () => context.pushNamed(AppRoute.crisisMode),
             ),
             _HelpOption(
               title: 'Afrontar una crisis',
               description:
                   'Las crisis también pasan. Conoce tu plan para desenredar.',
               icon: Icons.menu_book_outlined,
-              onTap: () => context.goNamed(AppRoute.safetyPlanStory),
+              onTap: () => context.pushNamed(AppRoute.safetyPlanStory),
             ),
           ],
         ),

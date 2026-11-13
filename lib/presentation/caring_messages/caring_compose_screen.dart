@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/navigation.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../../content/caring_messages_content.dart';
@@ -158,7 +159,7 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => context.goNamed(AppRoute.caregiverConnections),
+                    onPressed: () => context.goBack(AppRoute.caregiverConnections),
                     icon: const Icon(Icons.arrow_back),
                     tooltip: 'Volver a Tejiendo vínculos',
                   ),
@@ -263,7 +264,7 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
               fullWidth: true,
               icon: const Icon(Icons.people_outline),
               onPressed: () =>
-                  context.goNamed(AppRoute.caregiverConnectionQuestions),
+                  context.pushNamed(AppRoute.caregiverConnectionQuestions),
             ),
             const SizedBox(height: 8),
             ContigoButton(
@@ -271,7 +272,7 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
               variant: ContigoButtonVariant.secondary,
               fullWidth: true,
               icon: const Icon(Icons.event_outlined),
-              onPressed: () => context.goNamed(AppRoute.caregiverEncounter),
+              onPressed: () => context.pushNamed(AppRoute.caregiverEncounter),
             ),
             const SizedBox(height: 8),
             // Mensaje íntimo: distinto del mensaje de cuidado (tarea 3.19).
@@ -281,7 +282,7 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
               fullWidth: true,
               icon: const Icon(Icons.mail_outline),
               onPressed: () =>
-                  context.goNamed(AppRoute.caregiverIntimateMessage),
+                  context.pushNamed(AppRoute.caregiverIntimateMessage),
             ),
           ],
         );
@@ -649,7 +650,7 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
             label: 'Salir del recurso',
             variant: ContigoButtonVariant.secondary,
             fullWidth: true,
-            onPressed: () => context.goNamed(AppRoute.caregiverConnections),
+            onPressed: () => context.goBack(AppRoute.caregiverConnections),
           ),
         ),
       ]);
@@ -663,7 +664,7 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
               label: 'Salir del recurso',
               variant: ContigoButtonVariant.secondary,
               fullWidth: true,
-              onPressed: () => context.goNamed(AppRoute.caregiverConnections),
+              onPressed: () => context.goBack(AppRoute.caregiverConnections),
             ),
           ),
         ]);

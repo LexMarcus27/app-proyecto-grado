@@ -83,7 +83,7 @@ class _CrisisModeScreenState extends ConsumerState<CrisisModeScreen> {
                       _SelfHelpCard(
                         step: _step,
                         totalSteps: _totalSteps,
-                        onOpenSkill: () => context.goNamed(AppRoute.breathing),
+                        onOpenSkill: () => context.pushNamed(AppRoute.breathing),
                         onChooseOther: _advanceStep,
                         onCannotNow: _advanceStep,
                       ),

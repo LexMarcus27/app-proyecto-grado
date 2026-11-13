@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/navigation.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../../domain/journey/journey.dart';
@@ -41,9 +42,9 @@ class PcsConnectionQuestionsScreen extends ConsumerWidget {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => context.goNamed(AppRoute.pcsHome),
+                    onPressed: () => context.goBack(AppRoute.pcsHome),
                     icon: const Icon(Icons.arrow_back),
-                    tooltip: 'Volver al inicio',
+                    tooltip: 'Volver',
                   ),
                   Expanded(
                     child: Text('Preguntas para conectar',
@@ -104,7 +105,7 @@ class _NoPartner extends StatelessWidget {
           ContigoButton(
             label: 'Ir a Tu mapa de red',
             fullWidth: true,
-            onPressed: () => context.goNamed(AppRoute.networkMap),
+            onPressed: () => context.pushNamed(AppRoute.networkMap),
           ),
         ],
       ),

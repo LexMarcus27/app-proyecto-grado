@@ -78,7 +78,7 @@ class PcsHomeScreen extends ConsumerWidget {
               fullWidth: true,
               onPressed: () {
                 Navigator.of(sheetContext).pop();
-                context.goNamed(AppRoute.notifications);
+                context.pushNamed(AppRoute.notifications);
               },
             ),
             const SizedBox(height: 9),
@@ -100,7 +100,7 @@ class _HomeBody extends ConsumerWidget {
 
   final JourneyState journey;
 
-  void _openMap(BuildContext context) => context.goNamed(
+  void _openMap(BuildContext context) => context.pushNamed(
         journey.mapGenerated ? AppRoute.networkMap : AppRoute.networkBuilder,
       );
 
@@ -192,7 +192,7 @@ class _HomeBody extends ConsumerWidget {
         ),
         if (showWelcome) ...[
           _OnboardingPrompt(
-            onStart: () => context.goNamed(AppRoute.pcsOnboarding),
+            onStart: () => context.pushNamed(AppRoute.pcsOnboarding),
           ),
           const SizedBox(height: 16),
         ],
@@ -232,21 +232,21 @@ class _HomeBody extends ConsumerWidget {
                 description: 'Cuida tus relaciones',
                 icon: Icons.all_inclusive,
                 palette: _TilePalette.connection,
-                onTap: () => context.goNamed(AppRoute.connectionHub),
+                onTap: () => context.pushNamed(AppRoute.connectionHub),
               ),
               _HomeTile(
                 title: 'Necesito ayuda',
                 description: 'Crisis y plan de seguridad',
                 icon: Icons.support,
                 palette: _TilePalette.help,
-                onTap: () => context.goNamed(AppRoute.helpHub),
+                onTap: () => context.pushNamed(AppRoute.helpHub),
               ),
               _HomeTile(
                 title: '¿Cómo estoy hoy?',
                 description: 'Registra cómo te sientes',
                 icon: Icons.wb_sunny_outlined,
                 palette: _TilePalette.checkin,
-                onTap: () => context.goNamed(AppRoute.ema),
+                onTap: () => context.pushNamed(AppRoute.ema),
               ),
             ],
           ),
@@ -279,30 +279,30 @@ class _HomeBody extends ConsumerWidget {
               : 'Ver notificaciones simuladas ($available)',
           onTap: () {
             ref.read(notificationsControllerProvider.notifier).dismissVisible();
-            context.goNamed(AppRoute.notifications);
+            context.pushNamed(AppRoute.notifications);
           },
         ),
         if (journey.onboardingStatus == OnboardingStatus.deferred &&
             !journey.mapGenerated)
           _ExtraRow(
             label: 'Tu mapa te espera',
-            onTap: () => context.goNamed(AppRoute.networkBuilder),
+            onTap: () => context.pushNamed(AppRoute.networkBuilder),
           ),
         _ExtraRow(
           label: 'Mensajes de cuidado',
-          onTap: () => context.goNamed(AppRoute.caringInbox),
+          onTap: () => context.pushNamed(AppRoute.caringInbox),
         ),
         _ExtraRow(
           label: 'Preguntas para conectar',
-          onTap: () => context.goNamed(AppRoute.pcsConnectionQuestions),
+          onTap: () => context.pushNamed(AppRoute.pcsConnectionQuestions),
         ),
         _ExtraRow(
           label: 'Evaluar una relación',
-          onTap: () => context.goNamed(AppRoute.relationEvaluation),
+          onTap: () => context.pushNamed(AppRoute.relationEvaluation),
         ),
         _ExtraRow(
           label: 'Mi plan para desenredar',
-          onTap: () => context.goNamed(AppRoute.safetyPlanStory),
+          onTap: () => context.pushNamed(AppRoute.safetyPlanStory),
         ),
         const SizedBox(height: 16),
         // Accesos de desarrollo (galería y controles de demostración).
@@ -311,11 +311,11 @@ class _HomeBody extends ConsumerWidget {
             alignment: WrapAlignment.center,
             children: [
               TextButton(
-                onPressed: () => context.goNamed(AppRoute.componentGallery),
+                onPressed: () => context.pushNamed(AppRoute.componentGallery),
                 child: const Text('Ver componentes'),
               ),
               TextButton(
-                onPressed: () => context.goNamed(AppRoute.demoControls),
+                onPressed: () => context.pushNamed(AppRoute.demoControls),
                 child: const Text('Controles de demostración'),
               ),
             ],

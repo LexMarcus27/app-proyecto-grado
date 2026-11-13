@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../app/di.dart';
+import '../../app/navigation.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../../domain/safety_plan/safety_plan_draft.dart';
@@ -67,7 +68,7 @@ class _EditorBody extends ConsumerWidget {
           child: Row(
             children: [
               IconButton(
-                onPressed: () => context.goNamed(AppRoute.helpHub),
+                onPressed: () => context.goBack(AppRoute.helpHub),
                 icon: const Icon(Icons.arrow_back),
                 tooltip: 'Volver a Necesito ayuda',
               ),
@@ -201,7 +202,7 @@ class _EditorBody extends ConsumerWidget {
           child: ContigoButton(
             label: 'Usar mi plan ahora',
             fullWidth: true,
-            onPressed: () => context.goNamed(AppRoute.crisisMode),
+            onPressed: () => context.pushNamed(AppRoute.crisisMode),
           ),
         ),
       ],

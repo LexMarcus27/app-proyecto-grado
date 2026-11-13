@@ -68,7 +68,7 @@ void main() {
     expect(journey.mapGenerated, isFalse);
     await tester.tap(find.text('¿En dónde tejer?'));
     await tester.pumpAndSettle();
-    expect(c.read(routerProvider).routeInformationProvider.value.uri.path,
+    expect(c.read(routerProvider).state.uri.path,
       AppPath.networkBuilder, reason: 'El acceso de red debe permitir iniciar la construcción si se aplazó');
   });
 
@@ -84,7 +84,7 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Escribir un mensaje de cuidado'));
     await tester.pumpAndSettle();
-    expect(c.read(routerProvider).routeInformationProvider.value.uri.path, AppPath.caringCompose);
+    expect(c.read(routerProvider).state.uri.path, AppPath.caringCompose);
     expect(tester.takeException(), isNull, reason: 'La pantalla de bienvenida debe dibujarse sin ancho infinito');
     expect(find.text('Conocer los mensajes de cuidado'), findsOneWidget);
   });

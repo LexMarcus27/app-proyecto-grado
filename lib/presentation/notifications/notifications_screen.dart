@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
+import '../../app/navigation.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../authorization/gating.dart';
@@ -48,7 +48,7 @@ class NotificationsScreen extends ConsumerWidget {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => context.goNamed(AppRoute.pcsHome),
+                    onPressed: () => context.goBack(AppRoute.pcsHome),
                     icon: const Icon(Icons.arrow_back),
                     tooltip: 'Volver al inicio',
                   ),

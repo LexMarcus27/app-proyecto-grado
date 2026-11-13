@@ -60,7 +60,7 @@ void main() {
     await tester.ensureVisible(find.byType(NotificationCard).first);
     await tester.tap(find.byType(NotificationCard).first);
     await tester.pumpAndSettle();
-    expect(c.read(routerProvider).routeInformationProvider.value.uri.path,
+    expect(c.read(routerProvider).state.uri.path,
       AppPath.connectionHub, reason: 'La tarjeta promete abrir la herramienta; el recordatorio tiene destino ya implementado');
   });
   testWidgets('Recurso de aprendizaje del cuidador responde', (tester) async {
@@ -88,7 +88,7 @@ void main() {
       await tester.tap(action);
       await tester.pumpAndSettle();
     }
-    expect(c.read(routerProvider).routeInformationProvider.value.uri.path,
+    expect(c.read(routerProvider).state.uri.path,
       AppPath.connectionHub, reason: 'La accion dirigida debe quedar deshabilitada tambien en Otros pasos');
   });
   testWidgets('Modo crisis conserva opciones de avance del prototipo', (tester) async {

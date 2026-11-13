@@ -146,7 +146,7 @@ void main() {
     expect(find.text('Revisa la persona de tu registro'), findsOneWidget);
     expect(find.text('Continuar con el registro de hoy'), findsNothing);
     await clickText(tester, 'Ir a Tu mapa de red');
-    debugPrint('REVIEW_B_ROUTE=${f.router.routeInformationProvider.value.uri}');
+    debugPrint('REVIEW_B_ROUTE=${f.router.state.uri}');
     debugPrint('REVIEW_B_TEXTS=${find.byType(Text).evaluate().map((e) => (e.widget as Text).data ?? (e.widget as Text).textSpan?.toPlainText()).toList()}');
     expect(find.text('Tu mapa de red'), findsOneWidget);
     await clickText(tester, 'Seleccionar para registro EMA');

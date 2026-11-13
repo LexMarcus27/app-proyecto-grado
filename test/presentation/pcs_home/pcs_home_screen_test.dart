@@ -65,7 +65,7 @@ void main() {
     await tester.tap(find.text('¿Cómo estoy hoy?'));
     await tester.pumpAndSettle();
     expect(
-      container.read(routerProvider).routeInformationProvider.value.uri.path,
+      container.read(routerProvider).state.uri.path,
       AppPath.ema,
     );
   });
@@ -79,7 +79,7 @@ void main() {
     await tester.tap(find.text('Mensajes de cuidado'));
     await tester.pumpAndSettle();
     expect(
-      container.read(routerProvider).routeInformationProvider.value.uri.path,
+      container.read(routerProvider).state.uri.path,
       AppPath.caringInbox,
     );
   });
