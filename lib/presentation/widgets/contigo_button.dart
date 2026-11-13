@@ -8,7 +8,9 @@ import '../../app/theme.dart';
 /// colores y jerarquía (Requirement 2.3), consumidos desde el tema
 /// ([ContigoColors]), nunca con literales de color.
 enum ContigoButtonVariant {
-  /// Acción principal: fondo terracota de marca, texto blanco.
+  /// Acción principal: fondo rosa de marca (`C.brand`), texto blanco. Las
+  /// pantallas internas del PCS usan su propio primario terracota
+  /// (`.pcs-primary`, `PcsPillButton`).
   primary,
 
   /// Acción secundaria: fondo suave con texto y borde de marca.
@@ -127,23 +129,23 @@ class ContigoButton extends StatelessWidget {
     switch (variant) {
       case ContigoButtonVariant.primary:
         return const _ButtonStyleTokens(
-          background: ContigoColors.terracotta,
+          background: ContigoColors.brand,
           foreground: ContigoColors.surface,
         );
       case ContigoButtonVariant.secondary:
         return const _ButtonStyleTokens(
           background: ContigoColors.notifQuestionsBg,
-          foreground: ContigoColors.terracotta,
-          border: ContigoColors.notifMeetingBg,
+          foreground: ContigoColors.brand,
+          border: ContigoColors.brandSoft,
         );
       case ContigoButtonVariant.tertiary:
         return const _ButtonStyleTokens(
           background: Colors.transparent,
-          foreground: ContigoColors.terracotta,
+          foreground: ContigoColors.brand,
         );
       case ContigoButtonVariant.critical:
         return const _ButtonStyleTokens(
-          background: ContigoColors.clay,
+          background: ContigoColors.critical,
           foreground: ContigoColors.surface,
         );
       case ContigoButtonVariant.ghost:

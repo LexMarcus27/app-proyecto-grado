@@ -14,6 +14,9 @@ import 'caring_messages_controller.dart';
 /// Vistas del recurso de mensajes de cuidado del cuidador.
 enum _ComposeView { welcome, guide, origin, compose, review, sent }
 
+/// Vista a la que vuelve «Cómo empezó todo» (`originReturnView`, F11).
+enum _OriginReturn { welcome, compose, guide }
+
 /// Pantalla del cuidador para redactar un **mensaje para tejer cercanía**
 /// (tarea 3.18), portada de `CaringMessageScreen` (`src/screens/caring-message.tsx`).
 ///
@@ -58,7 +61,31 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
   /// habilita tras recorrer las seis partes (portado del prototipo).
   final Set<int> _visitedGuidePages = <int>{};
 
-  bool get _guideReviewed => _visitedGuidePages.length >= _guideTitles.length;
+  /// `true` si la guía ya se recorrió en esta sesión **para el vínculo
+  /// vigente** (estado de sesión por vínculo, F10) o en esta visita.
+  bool _guideReviewedFor(String? key) =>
+      _visitedGuidePages.length >= _guideTitles.length ||
+      (key != null && ref.read(caringGuidesReviewedProvider).contains(key));
+
+  bool get _guideReviewed => _guideReviewedFor(_activeKey);
+
+  /// Vista de retorno de «Cómo empezó todo» (F11).
+  _OriginReturn _originReturn = _OriginReturn.welcome;
+
+  void _openOrigin(_OriginReturn from) => setState(() {
+        _originReturn = from;
+        _view = _ComposeView.origin;
+        _notice = null;
+      });
+
+  /// Registra la guía como revisada para el vínculo vigente cuando se han
+  /// recorrido sus seis partes.
+  void _syncGuideReviewed() {
+    final key = _activeKey;
+    if (key != null && _visitedGuidePages.length >= _guideTitles.length) {
+      ref.read(caringGuidesReviewedProvider.notifier).markReviewed(key);
+    }
+  }
 
   static const List<String> _guideTitles = [
     'Un flotador en medio del mar',
@@ -85,6 +112,7 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
     final currentContext = ref.watch(currentCaringContextProvider);
     final currentKey =
         currentContext == null ? null : caringDraftKey(currentContext);
+    ref.watch(caringGuidesReviewedProvider);
 
     // Si la clave del vínculo cambió mientras la pantalla estaba abierta,
     // reinicia el editor y la vista previa y descarta la revisión capturada.
@@ -92,6 +120,8 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         setState(() {
+          // Otra asociación no hereda la lectura de esta visita.
+          if (_activeKey != null) _visitedGuidePages.clear();
           _activeKey = currentKey;
           _reviewedKey = null;
           _reviewedText = '';
@@ -128,7 +158,7 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => context.goNamed(AppRoute.caregiverHome),
+                    onPressed: () => context.goNamed(AppRoute.caregiverConnections),
                     icon: const Icon(Icons.arrow_back),
                     tooltip: 'Volver a Tejiendo vínculos',
                   ),
@@ -141,7 +171,19 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
                           style: (textTheme.labelMedium ?? const TextStyle())
                               .copyWith(color: ContigoColors.inkMuted),
                         ),
-                        Text(title, style: textTheme.titleLarge),
+                        // Título serif del recurso (`.caring-header h1`).
+                        Text(
+                          title,
+                          style: const TextStyle(
+                            fontFamily: ContigoTheme.displayFontFamily,
+                            fontFamilyFallback:
+                                ContigoTheme.displayFontFallback,
+                            fontSize: 25,
+                            height: 30 / 25,
+                            fontWeight: FontWeight.w700,
+                            color: ContigoColors.ink,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -206,7 +248,7 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
                 label: 'Cómo empezó todo',
                 variant: ContigoButtonVariant.tertiary,
                 fullWidth: true,
-                onPressed: () => setState(() => _view = _ComposeView.origin),
+                onPressed: () => _openOrigin(_OriginReturn.welcome),
               ),
             ],
             const SizedBox(height: 16),
@@ -365,9 +407,17 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          _GuideSection(title: '¿Qué son?', paragraphs: CaringContent.definition),
+          _GuideSection(
+            title: '¿Qué son?',
+            // Como React (`replace(/^¿Qué son\?\s*/, "")`): sin repetir el título.
+            paragraphs: [
+              for (final text in CaringContent.definition)
+                text.replaceFirst(RegExp(r'^¿Qué son\?\s*'), ''),
+            ],
+          ),
           _GuideSection(
             title: 'Qué no son',
+            lilac: true,
             paragraphs: [CaringContent.notAdvice],
           ),
         ]);
@@ -382,22 +432,25 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
           style: textTheme.bodyMedium,
         ));
         for (final group in CaringContent.examples) {
-          children.add(const SizedBox(height: 12));
-          children.add(Text(group.title, style: textTheme.titleSmall));
-          for (final msg in group.messages) {
-            children.add(_ExampleRow(
-              text: msg,
-              onAdd: () {
-                controller.appendIdea(msg);
-                setState(() => _notice =
-                    'Idea añadida al final del borrador. Puedes editarla al redactar.');
-              },
-            ));
-          }
+          children.add(_GuideSection(
+            title: group.title,
+            children: [
+              for (final msg in group.messages)
+                _ExampleRow(
+                  text: msg,
+                  onAdd: () {
+                    controller.appendIdea(msg);
+                    setState(() => _notice =
+                        'Idea añadida al final del borrador. Puedes editarla al redactar.');
+                  },
+                ),
+            ],
+          ));
         }
       case 3:
         children.add(_GuideSection(
           title: 'Un momento para conectar',
+          list: _GuideList.ordered,
           paragraphs: CaringContent.preparation,
         ));
       case 4:
@@ -406,10 +459,13 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
           const SizedBox(height: 10),
           _GuideSection(
             title: 'Estos mensajes buscan',
+            list: _GuideList.unordered,
             paragraphs: CaringContent.intentions,
           ),
           _GuideSection(
             title: 'Y muestran que',
+            lilac: true,
+            list: _GuideList.unordered,
             paragraphs: CaringContent.whatTheyShow,
           ),
         ]);
@@ -440,6 +496,7 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
           children.add(const SizedBox(height: 10));
           children.add(_GuideSection(
             title: 'Ya conoces los mensajes de cuidado',
+            lilac: true,
             paragraphs: const [
               'Si quieres, ahora puedes descubrir su historia antes de escribir.',
             ],
@@ -448,7 +505,7 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
             label: 'Cómo empezó todo',
             variant: ContigoButtonVariant.secondary,
             fullWidth: true,
-            onPressed: () => setState(() => _view = _ComposeView.origin),
+            onPressed: () => _openOrigin(_OriginReturn.guide),
           ));
         }
     }
@@ -532,6 +589,7 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
       _view = _ComposeView.guide;
       _notice = null;
     });
+    _syncGuideReviewed();
   }
 
   /// "Cómo empezó todo": los orígenes del prototipo con sus ilustraciones y
@@ -591,7 +649,7 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
             label: 'Salir del recurso',
             variant: ContigoButtonVariant.secondary,
             fullWidth: true,
-            onPressed: () => context.goNamed(AppRoute.caregiverHome),
+            onPressed: () => context.goNamed(AppRoute.caregiverConnections),
           ),
         ),
       ]);
@@ -605,7 +663,7 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
               label: 'Salir del recurso',
               variant: ContigoButtonVariant.secondary,
               fullWidth: true,
-              onPressed: () => context.goNamed(AppRoute.caregiverHome),
+              onPressed: () => context.goNamed(AppRoute.caregiverConnections),
             ),
           ),
         ]);
@@ -643,6 +701,8 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
                     _visitedGuidePages.add(_guidePage);
                   }
                   _notice = null;
+                  WidgetsBinding.instance
+                      .addPostFrameCallback((_) => _syncGuideReviewed());
                 }),
               ),
             ),
@@ -692,15 +752,26 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
         return _footerBar([
           Expanded(
             child: ContigoButton(
-              label: 'Volver al recurso',
+              label: switch (_originReturn) {
+                _OriginReturn.compose => 'Volver a mi mensaje',
+                _OriginReturn.guide => 'Volver a la guía',
+                _OriginReturn.welcome => 'Volver al recurso',
+              },
               variant: ContigoButtonVariant.secondary,
               fullWidth: true,
-              onPressed: () => setState(() => _view = _ComposeView.welcome),
+              // Vuelve al punto de origen conservando el borrador (F11).
+              onPressed: () => setState(() {
+                _view = switch (_originReturn) {
+                  _OriginReturn.compose => _ComposeView.compose,
+                  _OriginReturn.guide => _ComposeView.guide,
+                  _OriginReturn.welcome => _ComposeView.welcome,
+                };
+              }),
             ),
           ),
         ]);
       case _ComposeView.compose:
-        return _footerBar([
+        final composeBar = _footerBar([
           Expanded(
             child: ContigoButton(
               label: 'Guardar borrador',
@@ -719,6 +790,26 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
             ),
           ),
         ]);
+        // Acceso a los orígenes desde el editor solo con la guía revisada.
+        if (!_guideReviewed) return composeBar;
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              color: ContigoColors.surface,
+              padding: const EdgeInsets.fromLTRB(20, 6, 20, 0),
+              child: ContigoButton(
+                label: 'Cómo empezó todo',
+                variant: ContigoButtonVariant.tertiary,
+                small: true,
+                fullWidth: true,
+                onPressed: () => _openOrigin(_OriginReturn.compose),
+              ),
+            ),
+            composeBar,
+          ],
+        );
       case _ComposeView.review:
         return _footerBar([
           Expanded(
@@ -852,26 +943,115 @@ class _GuideProgress extends StatelessWidget {
   }
 }
 
+/// Tipo de lista de una sección de la guía.
+enum _GuideList { none, ordered, unordered }
+
+/// Sección narrativa de la guía (`.caring-section`): borde lateral, fondo
+/// suave y esquinas asimétricas. La variante [lilac] reproduce
+/// `.caring-section--sage` (lila `#EEE6F2`, borde `#9B84A8`).
 class _GuideSection extends StatelessWidget {
-  const _GuideSection({required this.title, required this.paragraphs});
+  const _GuideSection({
+    required this.title,
+    this.paragraphs = const [],
+    this.lilac = false,
+    this.list = _GuideList.none,
+    this.children = const [],
+  });
+
   final String title;
   final List<String> paragraphs;
+  final bool lilac;
+  final _GuideList list;
+  final List<Widget> children;
+
+  static const TextStyle _titleStyle = TextStyle(
+    fontSize: 18,
+    height: 25 / 18,
+    fontWeight: FontWeight.w800,
+    color: Color(0xFF674641),
+  );
+  static const TextStyle _bodyStyle = TextStyle(
+    fontSize: 16,
+    height: 25 / 16,
+    color: ContigoColors.ink,
+  );
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: textTheme.titleSmall),
-          const SizedBox(height: 6),
-          for (final p in paragraphs) ...[
-            Text(p, style: textTheme.bodyMedium),
-            const SizedBox(height: 6),
-          ],
-        ],
+    final items = <Widget>[];
+    for (var i = 0; i < paragraphs.length; i++) {
+      final text = paragraphs[i];
+      if (list == _GuideList.none) {
+        items.add(Padding(
+          padding: EdgeInsets.only(top: i == 0 ? 0 : 16),
+          child: Text(text, style: _bodyStyle),
+        ));
+      } else {
+        items.add(Padding(
+          padding: EdgeInsets.only(top: i == 0 ? 10 : 8, left: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 22,
+                child: Text(
+                  list == _GuideList.ordered ? '${i + 1}.' : '•',
+                  style: _bodyStyle.copyWith(
+                    color: const Color(0xFF687D5E),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Expanded(child: Text(text, style: _bodyStyle)),
+            ],
+          ),
+        ));
+      }
+    }
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 9),
+      decoration: BoxDecoration(
+        color: lilac ? const Color(0xFFEEE6F2) : const Color(0xFFFFFCF8),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(6),
+          topRight: Radius.circular(22),
+          bottomLeft: Radius.circular(22),
+          bottomRight: Radius.circular(22),
+        ),
+        border: Border.all(color: const Color(0xFFE3D8CD)),
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(5),
+          topRight: Radius.circular(21),
+          bottomLeft: Radius.circular(21),
+          bottomRight: Radius.circular(21),
+        ),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                width: 4,
+                color: lilac ? const Color(0xFF9B84A8) : const Color(0xFFBD8175),
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(14, 18, 18, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: _titleStyle),
+                      const SizedBox(height: 10),
+                      ...items,
+                      ...children,
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

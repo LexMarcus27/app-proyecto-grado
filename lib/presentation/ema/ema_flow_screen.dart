@@ -7,6 +7,8 @@ import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../../domain/ema/ema.dart';
 import '../../domain/journey/journey.dart';
+import '../../domain/connection/connection.dart';
+import '../connection/connection_selection.dart';
 import '../network/network_map_screen.dart';
 import '../widgets/widgets.dart';
 import 'ema_flow_gating.dart';
@@ -476,6 +478,7 @@ class _EmaFlowScreenState extends ConsumerState<EmaFlowScreen>
 
     return Scaffold(
       backgroundColor: ContigoColors.canvas,
+      floatingActionButton: SupportButton.pcs(context),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1027,13 +1030,19 @@ class _QuestionnaireBody extends StatelessWidget {
   }
 }
 
-/// Vista de resultado/siguientes pasos mínima y fiel (sin los próximos pasos de
-/// conexión, que llegan en la Etapa 3).
+/// Resultado del registro (M4, `EmaScreen` con `view="result"`): nota del
+/// acompañante y opciones del tamaño que la PCS pueda hoy.
 ///
-/// Presenta la nota del acompañante del prototipo y un resumen "Tu registro de
-/// hoy" con "{respondidos} de {N} hilos" y si se omitió el bloque de relación o
-/// cuál fue la persona de referencia (verbatim del `details` del prototipo).
-class _ResultView extends StatelessWidget {
+/// - «Pequeño · 1 min aprox.» → mensajes de cuidado recibidos.
+/// - «Mediano · 5 min aprox.» → escribir o llamar a una persona vinculada
+///   (o elegir otra) y mensaje para tejer cercanía.
+/// - «Más grande · esta semana» → proponer un encuentro.
+/// - Habilidades, «Ahora no» y el resumen plegable «Tu registro de hoy» con el
+///   acceso al plan de seguridad.
+///
+/// Los tiempos son orientación narrativa: **no** se derivan de las respuestas
+/// del EMA ni introducen reglas de elegibilidad.
+class _ResultView extends ConsumerWidget {
   const _ResultView({
     required this.draft,
     required this.journey,
@@ -1044,92 +1053,328 @@ class _ResultView extends StatelessWidget {
   final JourneyState journey;
   final VoidCallback onHome;
 
+  Future<void> _openStep(
+    BuildContext context,
+    WidgetRef ref,
+    ConnectionStep step, [
+    String? personId,
+  ]) async {
+    if (step == ConnectionStep.received) {
+      context.goNamed(AppRoute.caringInbox);
+      return;
+    }
+    if (step != ConnectionStep.skills && personId != null) {
+      final action = switch (step) {
+        ConnectionStep.contact => ConnectionAction.contact,
+        ConnectionStep.meeting => ConnectionAction.meeting,
+        _ => ConnectionAction.message,
+      };
+      final launch = connectionLaunch(journey, personId, action);
+      if (launch != null) {
+        await selectConnectionPerson(ref, personId);
+        if (!context.mounted) return;
+        context.goNamed(
+          AppRoute.connectionPerson,
+          queryParameters: {'p': personId, 'a': action.wireValue},
+        );
+        return;
+      }
+    }
+    context.goNamed(
+      AppRoute.connectionHub,
+      queryParameters: {'s': step.wireValue},
+    );
+  }
+
   @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+  Widget build(BuildContext context, WidgetRef ref) {
     final indices = emaQuestionIndices(draft);
     final answered = answeredEmaCount(draft);
     final omitted = draft.relationshipOmission == 'no-active-link';
     final referenceName = _referenceName(draft, journey);
+    final people = validCaregivers(journey);
+    final greeting = draft.completed
+        ? 'Gracias por contarme, Sofía.'
+        : 'Puedes acercarte a tu tejido, Sofía.';
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-      children: [
-        Semantics(
-          header: true,
-          child: Text(
-            'Opciones para acercarte a tu tejido',
-            style: (textTheme.headlineSmall ?? const TextStyle()).copyWith(
-              color: ContigoColors.ink,
+    return ColoredBox(
+      color: PcsColors.canvas,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, supportContentPadding),
+        child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Semantics(
+            header: true,
+            label: 'Opciones para acercarte a tu tejido',
+            child: const SizedBox.shrink(),
+          ),
+          CompanionNote(
+            affection: true,
+            child: Text(
+              '$greeting ¿Te serviría sentirte acompañada? Elige algo del '
+              'tamaño que puedas hoy.',
+              style: const TextStyle(fontSize: 16, height: 24 / 16),
             ),
           ),
-        ),
-        const SizedBox(height: 12),
-        CompanionNote(
-          affection: true,
-          child: Text(
-            'Gracias por contarme, Sofía. ¿Te serviría sentirte acompañada? '
-            'Elige algo del tamaño que puedas hoy.',
+          _SizeCard(
+            eyebrow: 'Pequeño · 1 min aprox.',
+            title: 'Ver mensajes de cuidado',
+            body: 'Vuelve a los mensajes que has recibido. No tienes que '
+                'responder.',
+            onTap: () => _openStep(context, ref, ConnectionStep.received),
           ),
-        ),
-        const SizedBox(height: 8),
-        // Resumen "Tu registro de hoy" (verbatim del details del prototipo).
-        ContigoCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          _SizeCard(
+            eyebrow: 'Mediano · 5 min aprox.',
+            title: 'Escribir o llamar a alguien cercano',
+            body: '¿A quién?',
+            footer: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final person in people)
+                      _PersonPill(
+                        label: person.name,
+                        onTap: () => _openStep(
+                          context,
+                          ref,
+                          ConnectionStep.contact,
+                          person.id,
+                        ),
+                      ),
+                    _PersonPill(
+                      label: people.isEmpty
+                          ? 'Elegir una persona'
+                          : 'Elegir otra persona',
+                      onTap: () =>
+                          _openStep(context, ref, ConnectionStep.contact),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: const Color(0xFF7F3D23),
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                  ),
+                  onPressed: () =>
+                      _openStep(context, ref, ConnectionStep.message),
+                  child: const Text(
+                    'Escribir mensaje para tejer cercanía',
+                    style: TextStyle(
+                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _SizeCard(
+            eyebrow: 'Más grande · esta semana',
+            title: 'Proponer un encuentro',
+            body: 'Algo sencillo: un café, caminar o ver una serie.',
+            onTap: () => _openStep(context, ref, ConnectionStep.meeting),
+          ),
+          const Text(
+            'Los tiempos son orientativos. Puedes ir a tu propio ritmo.',
+            style: TextStyle(
+              fontSize: 12,
+              height: 18 / 12,
+              color: Color(0xFF626169),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Row(
             children: [
-              Text(
-                'Tu registro de hoy',
-                style: (textTheme.titleMedium ?? const TextStyle()).copyWith(
-                  color: ContigoColors.ink,
+              Expanded(
+                child: PcsSkillsButton(
+                  label: 'Aprender habilidades',
+                  onPressed: () =>
+                      _openStep(context, ref, ConnectionStep.skills),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                '$answered de ${indices.length} hilos respondidos.',
-                style: (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-                  color: ContigoColors.ink,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                omitted
-                    ? 'Hoy no se incluyó el bloque sobre una persona cercana '
-                          'vinculada.'
-                    : 'Persona de referencia: $referenceName.',
-                style: (textTheme.bodyMedium ?? const TextStyle()).copyWith(
-                  color: ContigoColors.inkMuted,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Las respuestas de este prototipo se conservan durante esta '
-                'sesión y se borran al recargar. Estas opciones no se '
-                'seleccionan a partir de tus respuestas.',
-                style: (textTheme.bodySmall ?? const TextStyle()).copyWith(
-                  color: ContigoColors.inkMuted,
+              const SizedBox(width: 10),
+              Expanded(
+                child: PcsPillButton(
+                  label: 'Ahora no',
+                  secondary: true,
+                  onPressed: onHome,
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 20),
+          // Resumen plegable «Tu registro de hoy» (`details.pcs-result-review`).
+          Material(
+            color: PcsColors.lilac,
+            borderRadius: BorderRadius.circular(14),
+            clipBehavior: Clip.antiAlias,
+            child: Theme(
+              data: Theme.of(context)
+                  .copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                key: const Key('ema-result-review'),
+                tilePadding: const EdgeInsets.symmetric(horizontal: 12),
+                childrenPadding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
+                title: const Text(
+                  'Tu registro de hoy',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+                ),
+                children: [
+                  Text(
+                    '$answered de ${indices.length} hilos respondidos.',
+                    style: const TextStyle(fontSize: 13, height: 20 / 13),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    omitted
+                        ? 'Hoy no se incluyó el bloque sobre una persona '
+                            'cercana vinculada.'
+                        : 'Persona de referencia: $referenceName.',
+                    style: const TextStyle(fontSize: 13, height: 20 / 13),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Las respuestas de este prototipo se conservan durante '
+                    'esta sesión y se borran al recargar. Estas opciones no se '
+                    'seleccionan a partir de tus respuestas.',
+                    style: TextStyle(fontSize: 13, height: 20 / 13),
+                  ),
+                  const SizedBox(height: 12),
+                  ContigoButton(
+                    label: 'Ver mi plan de seguridad',
+                    variant: ContigoButtonVariant.secondary,
+                    fullWidth: true,
+                    onPressed: () =>
+                        context.goNamed(AppRoute.safetyPlanEditor),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
         ),
-        const SizedBox(height: 8),
-        // Nota: los pasos de conexión ("Ver mensajes de cuidado", "Escribir o
-        // llamar a alguien cercano", "Proponer un encuentro") llegan en la
-        // Etapa 3 (tarea 3.20). Aquí basta un camino de vuelta al inicio.
-        Text(
-          'Pronto podrás elegir un paso para acercarte a tu red desde aquí.',
-          style: (textTheme.bodySmall ?? const TextStyle()).copyWith(
-            color: ContigoColors.inkMuted,
+      ),
+    );
+  }
+}
+
+/// Tarjeta de opción por tamaño (`.pcs-size-card`).
+class _SizeCard extends StatelessWidget {
+  const _SizeCard({
+    required this.eyebrow,
+    required this.title,
+    required this.body,
+    this.onTap,
+    this.footer,
+  });
+
+  final String eyebrow;
+  final String title;
+  final String body;
+  final VoidCallback? onTap;
+  final Widget? footer;
+
+  @override
+  Widget build(BuildContext context) {
+    final content = Padding(
+      padding: EdgeInsets.fromLTRB(18, 20, onTap != null ? 34 : 18, 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(eyebrow.toUpperCase(), style: PcsText.eyebrow),
+          const SizedBox(height: 12),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 18,
+              height: 25 / 18,
+              fontWeight: FontWeight.w800,
+              color: PcsColors.ink,
+            ),
+          ),
+          const SizedBox(height: 9),
+          Text(body, style: PcsText.body),
+          ?footer,
+        ],
+      ),
+    );
+    final card = Material(
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(24),
+        side: const BorderSide(color: PcsColors.border),
+      ),
+      child: onTap == null
+          ? content
+          : InkWell(
+              borderRadius: BorderRadius.circular(24),
+              onTap: onTap,
+              child: Stack(
+                children: [
+                  content,
+                  const Positioned(
+                    right: 14,
+                    top: 18,
+                    child: Icon(
+                      Icons.chevron_right,
+                      color: PcsColors.terracotta,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+    );
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: onTap == null
+          ? card
+          : Semantics(
+              button: true,
+              label: '$title. $body',
+              child: card,
+            ),
+    );
+  }
+}
+
+class _PersonPill extends StatelessWidget {
+  const _PersonPill({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: PcsColors.peach,
+      shape: const StadiumBorder(side: BorderSide(color: Color(0xFFE5D8CA))),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onTap,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 44),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                height: 20 / 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF4F3A2F),
+              ),
+            ),
           ),
         ),
-        const SizedBox(height: 16),
-        ContigoButton(
-          label: 'Volver al inicio',
-          fullWidth: true,
-          onPressed: onHome,
-        ),
-      ],
+      ),
     );
   }
 }

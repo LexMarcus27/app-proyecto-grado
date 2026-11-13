@@ -56,7 +56,7 @@ void main() {
 
     await _activateWith(tester, 'A3K9X2');
 
-    expect(find.text('Inicio PCS'), findsOneWidget);
+    expect(find.byKey(const Key('pcs-home-title')), findsOneWidget);
   });
 
   testWidgets('un código que empieza con «C» enruta al inicio del Cuidador', (
@@ -66,7 +66,7 @@ void main() {
 
     await _activateWith(tester, 'C1D2E3');
 
-    expect(find.text('Inicio Cuidador'), findsOneWidget);
+    expect(find.byKey(const Key('caregiver-home-title')), findsOneWidget);
   });
 
   testWidgets('un código demasiado corto muestra el error y no navega', (

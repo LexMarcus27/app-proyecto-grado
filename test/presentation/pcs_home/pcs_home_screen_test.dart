@@ -48,7 +48,7 @@ void main() {
     addTearDown(container.dispose);
     await _pump(tester, container);
 
-    expect(find.text('Inicio PCS'), findsOneWidget);
+    expect(find.byKey(const Key('pcs-home-title')), findsOneWidget);
     expect(find.text('¿Cómo estoy hoy?'), findsOneWidget);
     expect(find.text('Tejiendo vínculos'), findsOneWidget);
     expect(find.text('Mensajes de cuidado'), findsOneWidget);

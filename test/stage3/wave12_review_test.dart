@@ -82,6 +82,8 @@ void main() {
     await tester.ensureVisible(entry);
     await tester.tap(entry);
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Escribir un mensaje de cuidado'));
+    await tester.pumpAndSettle();
     expect(c.read(routerProvider).routeInformationProvider.value.uri.path, AppPath.caringCompose);
     expect(tester.takeException(), isNull, reason: 'La pantalla de bienvenida debe dibujarse sin ancho infinito');
     expect(find.text('Conocer los mensajes de cuidado'), findsOneWidget);

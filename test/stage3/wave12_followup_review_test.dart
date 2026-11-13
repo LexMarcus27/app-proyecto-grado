@@ -64,6 +64,7 @@ void main() {
     await _pump(tester, c, AppPath.caregiverHome);
     const sample = 'Mensaje ficticio para la prueba de cambio de rol.';
     await _tapLabel(tester, 'Tejiendo vínculos');
+    await _tapLabel(tester, 'Escribir un mensaje de cuidado');
     await _tapLabel(tester, 'Crear un mensaje');
     await tester.enterText(find.byType(TextFormField), sample);
     await tester.pumpAndSettle();
@@ -71,6 +72,8 @@ void main() {
     await _tapLabel(tester, 'Simular envío');
     expect((await c.read(caringMessageRepositoryProvider).loadMessages()).single.text, sample);
     await _tapLabel(tester, 'Salir del recurso');
+    await _tapLabel(tester, 'Perfil');
+    await _tapLabel(tester, 'Herramientas de demostración del cuidador');
     await _tapLabel(tester, 'Controles de demostración');
     await _tapLabel(tester, 'Entrar como PCS');
     if (tester.any(find.text('Cambiar de rol (demo)'))) {
@@ -86,6 +89,7 @@ void main() {
     addTearDown(c.dispose);
     await _pump(tester, c, AppPath.caregiverHome);
     await _tapLabel(tester, 'Tejiendo vínculos');
+    await _tapLabel(tester, 'Escribir un mensaje de cuidado');
     await _tapLabel(tester, 'Crear un mensaje');
     await tester.enterText(find.byType(TextFormField), 'Borrador ficticio del vínculo anterior');
     await tester.pumpAndSettle();
@@ -102,6 +106,7 @@ void main() {
     await tester.pumpAndSettle();
     expect(caregiverContext(updated, DemoCaregiver.id)?.associationId, 'asociacion-demo-nueva');
     await _tapLabel(tester, 'Tejiendo vínculos');
+    await _tapLabel(tester, 'Escribir un mensaje de cuidado');
     expect(find.text('Continuar mi borrador'), findsNothing);
     expect(find.text('Crear un mensaje'), findsOneWidget);
   });

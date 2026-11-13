@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,9 +21,14 @@ class _CaregiverGatedScaffold extends ConsumerWidget {
   const _CaregiverGatedScaffold({
     required this.title,
     required this.builder,
+    this.fromConnections = false,
   });
 
   final String title;
+
+  /// `true` para los recursos que se abren desde «Tejiendo vínculos» (M23):
+  /// la flecha vuelve a ese hub en lugar del inicio, como en el prototipo.
+  final bool fromConnections;
   final Widget Function(BuildContext context, CaregiverContext careContext)
       builder;
 
@@ -42,9 +49,15 @@ class _CaregiverGatedScaffold extends ConsumerWidget {
               child: Row(
                 children: [
                   IconButton(
-                    onPressed: () => context.goNamed(AppRoute.caregiverHome),
+                    onPressed: () => context.goNamed(
+                      fromConnections
+                          ? AppRoute.caregiverConnections
+                          : AppRoute.caregiverHome,
+                    ),
                     icon: const Icon(Icons.arrow_back),
-                    tooltip: 'Volver al inicio del cuidador',
+                    tooltip: fromConnections
+                        ? 'Volver a Tejiendo vínculos'
+                        : 'Volver al inicio del cuidador',
                   ),
                   Expanded(child: Text(title, style: textTheme.titleLarge)),
                 ],
@@ -345,12 +358,38 @@ class CaregiverLinkCheckInScreen extends StatelessWidget {
   }
 }
 
-class _LinkCheckInBody extends ConsumerWidget {
+class _LinkCheckInBody extends ConsumerStatefulWidget {
   const _LinkCheckInBody({required this.pcsName});
   final String pcsName;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_LinkCheckInBody> createState() => _LinkCheckInBodyState();
+}
+
+class _LinkCheckInBodyState extends ConsumerState<_LinkCheckInBody> {
+  /// Retorno automático al inicio tras guardar (`setTimeout(navigate(9),
+  /// 2600)` del prototipo). Se cancela si la pantalla se desmonta antes.
+  Timer? _returnTimer;
+
+  @override
+  void dispose() {
+    _returnTimer?.cancel();
+    super.dispose();
+  }
+
+  void _save(LinkCheckInController controller) {
+    controller.markSaved();
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Registro de prueba completado. No se ha enviado.'),
+    ));
+    _returnTimer = Timer(const Duration(milliseconds: 2600), () {
+      if (mounted) context.goNamed(AppRoute.caregiverHome);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pcsName = widget.pcsName;
     final textTheme = Theme.of(context).textTheme;
     // El estado del registro se conserva por asociación (sobrevive a una
     // revocación y se recupera al reactivar la misma asociación); no vive en el
@@ -375,6 +414,12 @@ class _LinkCheckInBody extends ConsumerWidget {
               Text('No se ha enviado.',
                   style: (textTheme.bodyMedium ?? const TextStyle())
                       .copyWith(color: ContigoColors.inkMuted)),
+              const SizedBox(height: 20),
+              ContigoButton(
+                label: 'Volver al inicio',
+                variant: ContigoButtonVariant.secondary,
+                onPressed: () => context.goNamed(AppRoute.caregiverHome),
+              ),
             ],
           ),
         ),
@@ -433,8 +478,16 @@ class _LinkCheckInBody extends ConsumerWidget {
           ContigoButton(
             label: 'Completar registro de prueba',
             fullWidth: true,
-            onPressed:
-                checkIn.hadContact == null ? null : controller.markSaved,
+            onPressed: checkIn.hadContact == null
+                ? null
+                : () => _save(controller),
+          ),
+          const SizedBox(height: 10),
+          ContigoButton(
+            label: 'Completar después',
+            variant: ContigoButtonVariant.tertiary,
+            fullWidth: true,
+            onPressed: () => context.goNamed(AppRoute.caregiverHome),
           ),
         ],
       ),
@@ -452,6 +505,7 @@ class CaregiverEncounterScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return _CaregiverGatedScaffold(
       title: 'Registrar encuentro',
+      fromConnections: true,
       builder: (context, careContext) =>
           _EncounterBody(pcsName: careContext.pcsName),
     );
@@ -559,6 +613,7 @@ class CaregiverConnectionQuestionsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return _CaregiverGatedScaffold(
       title: 'Preguntas para conectar',
+      fromConnections: true,
       builder: (context, careContext) =>
           _ConnectionQuestionsBody(otherName: careContext.pcsName),
     );
@@ -791,6 +846,7 @@ class CaregiverIntimateMessageScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return _CaregiverGatedScaffold(
       title: 'Mensaje íntimo',
+      fromConnections: true,
       builder: (context, careContext) =>
           _IntimateMessageBody(pcsName: careContext.pcsName),
     );

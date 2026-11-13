@@ -168,3 +168,27 @@ final visibleCaringMessagesProvider =
     }
   }
 });
+/// Número de mensajes de cuidado visibles para el PCS (para el contador
+/// «Ver mensajes de cuidado (n)» del hub de conexión).
+final visibleCaringMessagesCountProvider = Provider.autoDispose<int>(
+  (ref) => ref.watch(visibleCaringMessagesProvider).value?.length ?? 0,
+);
+
+/// Vínculos (clave completa `caringDraftKey`) cuya guía de mensajes de cuidado
+/// ya se recorrió en esta sesión (`caringGuidesReviewed` de `App.tsx`, F10).
+/// Vive solo en memoria; otra asociación no hereda la lectura.
+class CaringGuidesReviewedController extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => const <String>{};
+
+  void markReviewed(String key) {
+    if (state.contains(key)) return;
+    state = {...state, key};
+  }
+}
+
+/// Provider de las guías revisadas por vínculo en la sesión.
+final caringGuidesReviewedProvider =
+    NotifierProvider<CaringGuidesReviewedController, Set<String>>(
+  CaringGuidesReviewedController.new,
+);

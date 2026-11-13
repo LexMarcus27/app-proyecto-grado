@@ -53,7 +53,7 @@ void main() {
     addTearDown(container.dispose);
     await _pump(tester, container);
 
-    expect(find.text('Inicio Cuidador'), findsOneWidget);
+    expect(find.byKey(const Key('caregiver-home-title')), findsOneWidget);
     // El tile de aprendizaje siempre está habilitado.
     expect(find.text('Aprendiendo a tejer vínculos'), findsOneWidget);
     // Sin el aviso de "Necesitas un vínculo activo" cuando hay vínculo.
@@ -75,7 +75,7 @@ void main() {
     addTearDown(container.dispose);
     await _pump(tester, container);
 
-    expect(find.text('Inicio Cuidador'), findsOneWidget);
+    expect(find.byKey(const Key('caregiver-home-title')), findsOneWidget);
     // Los tiles dependientes muestran el aviso de vínculo requerido.
     expect(find.text('Necesitas un vínculo activo'), findsWidgets);
     // La tarjeta de vínculo indica que no hay persona vinculada.
@@ -96,6 +96,12 @@ void main() {
 
     expect(find.text('Necesitas un vínculo activo'), findsNothing);
 
+    // El panel demo es plegable, como el `<details>` del prototipo.
+    final panel = find.text('Herramientas de demostración del cuidador');
+    await tester.ensureVisible(panel);
+    await tester.pumpAndSettle();
+    await tester.tap(panel);
+    await tester.pumpAndSettle();
     final revoke = find.text('Simular revocación del vínculo');
     await tester.ensureVisible(revoke);
     await tester.pumpAndSettle();
