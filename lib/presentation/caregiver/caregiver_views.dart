@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/navigation.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../../domain/journey/journey.dart';
@@ -102,7 +103,7 @@ class _CaregiverPageHeader extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-            onPressed: () => context.goNamed(AppRoute.caregiverHome),
+            onPressed: () => context.goBack(AppRoute.caregiverHome),
             icon: const Icon(Icons.arrow_back, size: 22),
             label: const Text('Inicio'),
           ),
@@ -135,7 +136,7 @@ class _BlockedNotice extends StatelessWidget {
           label: 'Explorar recursos para aprender',
           variant: ContigoButtonVariant.secondary,
           fullWidth: true,
-          onPressed: () => context.goNamed(AppRoute.caregiverLearning),
+          onPressed: () => context.pushNamed(AppRoute.caregiverLearning),
         ),
       ],
     );
@@ -294,7 +295,7 @@ class CaregiverConnectionsScreen extends ConsumerWidget {
         variant: ContigoButtonVariant.secondary,
         fullWidth: true,
         icon: Icon(icon),
-        onPressed: () => context.goNamed(route),
+        onPressed: () => context.pushNamed(route),
       ),
     );
   }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
+import '../../app/navigation.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../../domain/relation_evaluation/relation_evaluation.dart';
@@ -161,7 +161,7 @@ class _RelationEvaluationScreenState
         setState(() => _stage = _EvalStage.result);
       case _EvalStage.person:
       case _EvalStage.sent:
-        context.goNamed(AppRoute.pcsHome);
+        context.goBack(AppRoute.pcsHome);
     }
   }
 
@@ -425,7 +425,7 @@ class _RelationEvaluationScreenState
         ContigoButton(
           label: 'Volver al inicio',
           fullWidth: true,
-          onPressed: () => context.goNamed(AppRoute.pcsHome),
+          onPressed: () => context.goBack(AppRoute.pcsHome),
         ),
       ],
     );

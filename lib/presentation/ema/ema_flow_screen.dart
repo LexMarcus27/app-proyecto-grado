@@ -521,7 +521,7 @@ class _EmaFlowScreenState extends ConsumerState<EmaFlowScreen>
             draft.relationshipOmission == null &&
             validCaregivers(journey).isEmpty) {
           return _NoLinkBody(
-            onOpenNetwork: () => context.goNamed(AppRoute.networkMap),
+            onOpenNetwork: () => context.pushNamed(AppRoute.networkMap),
             onContinueToday: () => _continueWithoutLink(journey),
             onExit: _exitFlow,
           );
@@ -1060,7 +1060,7 @@ class _ResultView extends ConsumerWidget {
     String? personId,
   ]) async {
     if (step == ConnectionStep.received) {
-      context.goNamed(AppRoute.caringInbox);
+      context.pushNamed(AppRoute.caringInbox);
       return;
     }
     if (step != ConnectionStep.skills && personId != null) {
@@ -1073,14 +1073,14 @@ class _ResultView extends ConsumerWidget {
       if (launch != null) {
         await selectConnectionPerson(ref, personId);
         if (!context.mounted) return;
-        context.goNamed(
+        context.pushNamed(
           AppRoute.connectionPerson,
           queryParameters: {'p': personId, 'a': action.wireValue},
         );
         return;
       }
     }
-    context.goNamed(
+    context.pushNamed(
       AppRoute.connectionHub,
       queryParameters: {'s': step.wireValue},
     );
@@ -1253,7 +1253,7 @@ class _ResultView extends ConsumerWidget {
                     variant: ContigoButtonVariant.secondary,
                     fullWidth: true,
                     onPressed: () =>
-                        context.goNamed(AppRoute.safetyPlanEditor),
+                        context.pushNamed(AppRoute.safetyPlanEditor),
                   ),
                 ],
               ),

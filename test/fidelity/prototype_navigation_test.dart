@@ -58,10 +58,10 @@ Future<void> _pump(
 }
 
 String _path(ProviderContainer c) =>
-    c.read(routerProvider).routeInformationProvider.value.uri.path;
+    c.read(routerProvider).state.uri.path;
 
 Uri _uri(ProviderContainer c) =>
-    c.read(routerProvider).routeInformationProvider.value.uri;
+    c.read(routerProvider).state.uri;
 
 Future<void> _tap(WidgetTester tester, Finder finder) async {
   await tester.ensureVisible(finder);
@@ -452,6 +452,51 @@ void mainBlock5() {
 
       expect(find.text('Pregunta 2 de 19'), findsOneWidget);
       expect(find.text('Guardar y continuar después'), findsOneWidget);
+    });
+  });
+
+  group('Volver a la pantalla anterior', () {
+    testWidgets('desde M8, mensajes y preguntas vuelven a «Conexión con M.»',
+        (tester) async {
+      final c = await _container(createDemoJourney());
+      addTearDown(c.dispose);
+      await _pump(tester, c, AppPath.pcsHome);
+
+      await _tap(tester, find.text('Tejiendo vínculos').first);
+      await _tap(tester, find.text('Planear un encuentro').last);
+      await _tap(tester, find.bySemanticsLabel('Elegir a M.'));
+      await _tap(tester, find.text('Proponer un encuentro'));
+      expect(_path(c), AppPath.connectionPerson);
+
+      await _tap(tester, find.text('Ver mensajes de cuidado'));
+      expect(_path(c), AppPath.caringInbox);
+      await _tap(tester, find.byTooltip('Volver'));
+      expect(_path(c), AppPath.connectionPerson);
+
+      await _tap(tester, find.text('Preguntas para conectar'));
+      expect(_path(c), AppPath.pcsConnectionQuestions);
+      await _tap(tester, find.byTooltip('Volver'));
+      expect(_path(c), AppPath.connectionPerson);
+
+      // «Ahora no» vuelve a «Tejiendo vínculos» y de ahí al inicio.
+      await _tap(tester, find.text('Ahora no'));
+      expect(_path(c), AppPath.connectionHub);
+    });
+
+    testWidgets('un mapa empezado sale del constructor con una sola flecha',
+        (tester) async {
+      final c = await _container(
+        createDemoJourney().copyWith(mapGenerated: false),
+      );
+      addTearDown(c.dispose);
+      await _pump(tester, c, AppPath.pcsHome);
+
+      await _tap(tester, find.text('¿En dónde tejer?'));
+      expect(_path(c), AppPath.networkBuilder);
+      expect(find.text('Avance de tu mapa'), findsOneWidget);
+
+      await _tap(tester, find.byTooltip('Volver'));
+      expect(_path(c), AppPath.pcsHome);
     });
   });
 }

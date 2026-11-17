@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/navigation.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../../domain/journey/journey.dart';
@@ -48,6 +49,12 @@ class NetworkBuilderScreen extends ConsumerStatefulWidget {
 class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
   _BuildStage _stage = _BuildStage.intro;
   bool _entryResolved = false;
+
+  /// Etapa (e ítem) con que se abrió la pantalla: volver desde ella sale a la
+  /// pantalla anterior en lugar de recorrer las etapas previas del constructor
+  /// (p. ej. al reabrir un mapa empezado, que entra por el avance).
+  _BuildStage _entryStage = _BuildStage.intro;
+  int _entryItemIndex = 0;
   int _nameIndex = 0;
 
   /// Respuesta elegida en el ítem actual, pendiente de confirmar con
@@ -70,59 +77,73 @@ class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
     final textTheme = Theme.of(context).textTheme;
     final journeyAsync = ref.watch(networkJourneyProvider);
 
-    return Scaffold(
-      backgroundColor: ContigoColors.canvas,
-      body: SafeArea(
-        child: journeyAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('No se pudo cargar: $e')),
-          data: (journey) {
-            // Entrada del prototipo (`openNetwork`): con un mapa empezado y
-            // personas, «progress» abre el avance; si no, la introducción.
-            if (!_entryResolved) {
-              _entryResolved = true;
-              NetworkPerson? editing;
-              for (final p in journey.people) {
-                if (p.id == widget.editPersonId) editing = p;
-              }
-              if (editing != null) {
-                // `startAssessment`: con tipo, empieza en el primer ítem.
-                _currentPersonId = editing.id;
-                if (editing.relationshipType == null) {
-                  _itemIndex = 0;
-                  _stage = _BuildStage.personIntro;
-                } else {
-                  _itemIndex = 1;
-                  _stage = _BuildStage.characterize;
+    return PopScope(
+      // El botón «atrás» del sistema se comporta igual que la flecha.
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _back(context);
+      },
+      child: Scaffold(
+        backgroundColor: ContigoColors.canvas,
+        body: SafeArea(
+          child: journeyAsync.when(
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(child: Text('No se pudo cargar: $e')),
+            data: (journey) {
+              // Entrada del prototipo (`openNetwork`): con un mapa empezado y
+              // personas, «progress» abre el avance; si no, la introducción.
+              if (!_entryResolved) {
+                _entryResolved = true;
+                NetworkPerson? editing;
+                for (final p in journey.people) {
+                  if (p.id == widget.editPersonId) editing = p;
                 }
-              } else if (journey.mapStarted && journey.people.isNotEmpty) {
-                _stage = _BuildStage.summary;
+                if (editing != null) {
+                  // `startAssessment`: con tipo, empieza en el primer ítem.
+                  _currentPersonId = editing.id;
+                  if (editing.relationshipType == null) {
+                    _itemIndex = 0;
+                    _stage = _BuildStage.personIntro;
+                  } else {
+                    _itemIndex = 1;
+                    _stage = _BuildStage.characterize;
+                  }
+                } else if (journey.mapStarted && journey.people.isNotEmpty) {
+                  _stage = _BuildStage.summary;
+                }
+                _entryStage = _stage;
+                _entryItemIndex = _itemIndex;
               }
-            }
-            return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const StatusBar(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 0, 16, 4),
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => _back(context),
-                      icon: const Icon(Icons.arrow_back),
-                      tooltip: 'Volver',
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const StatusBar(),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(8, 0, 16, 4),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () => _back(context),
+                          icon: const Icon(Icons.arrow_back),
+                          tooltip: 'Volver',
+                        ),
+                        Expanded(
+                          child: Text(
+                            _title(journey),
+                            style: textTheme.titleLarge,
+                          ),
+                        ),
+                      ],
                     ),
-                    Expanded(
-                      child: Text(_title(journey), style: textTheme.titleLarge),
-                    ),
-                  ],
-                ),
-              ),
-              SimulationIndicator.forFeature(NetworkBuilderScreen.featureLayer),
-              Expanded(child: _buildStage(journey)),
-            ],
-          );
-          },
+                  ),
+                  SimulationIndicator.forFeature(
+                    NetworkBuilderScreen.featureLayer,
+                  ),
+                  Expanded(child: _buildStage(journey)),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -145,9 +166,16 @@ class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
   }
 
   void _back(BuildContext context) {
+    final atEntry =
+        _stage == _entryStage &&
+        (_stage != _BuildStage.characterize || _itemIndex == _entryItemIndex);
+    if (atEntry) {
+      context.goBack(AppRoute.pcsHome);
+      return;
+    }
     switch (_stage) {
       case _BuildStage.intro:
-        context.goNamed(AppRoute.pcsHome);
+        context.goBack(AppRoute.pcsHome);
       case _BuildStage.personIntro:
         setState(() => _stage = _BuildStage.summary);
       case _BuildStage.names:
@@ -262,7 +290,8 @@ class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
               side: const BorderSide(color: border),
             ),
             child: Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+              data: Theme.of(context)
+                  .copyWith(dividerColor: Colors.transparent),
               child: const ExpansionTile(
                 tilePadding: EdgeInsets.symmetric(horizontal: 14),
                 childrenPadding: EdgeInsets.fromLTRB(14, 0, 14, 12),
@@ -308,7 +337,7 @@ class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
               label: 'Hacerlo después',
               variant: ContigoButtonVariant.tertiary,
               fullWidth: true,
-              onPressed: () => context.goNamed(AppRoute.pcsHome),
+              onPressed: () => context.goBack(AppRoute.pcsHome),
             ),
           ],
         ],
@@ -387,7 +416,7 @@ class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
             label: 'Guardar y salir',
             variant: ContigoButtonVariant.tertiary,
             fullWidth: true,
-            onPressed: () => context.goNamed(AppRoute.pcsHome),
+            onPressed: () => context.goBack(AppRoute.pcsHome),
           ),
         ],
       ),
@@ -405,13 +434,18 @@ class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Pregunta ${_nameIndex + 1} de $total',
-              style: (textTheme.bodySmall ?? const TextStyle())
-                  .copyWith(color: ContigoColors.inkMuted)),
+          Text(
+            'Pregunta ${_nameIndex + 1} de $total',
+            style: (textTheme.bodySmall ?? const TextStyle()).copyWith(
+              color: ContigoColors.inkMuted,
+            ),
+          ),
           const SizedBox(height: 8),
           ContigoCard(
-            child: Text(nameGeneratorQuestions[_nameIndex],
-                style: textTheme.titleMedium),
+            child: Text(
+              nameGeneratorQuestions[_nameIndex],
+              style: textTheme.titleMedium,
+            ),
           ),
           const SizedBox(height: 16),
           if (journey.people.isNotEmpty) ...[
@@ -539,8 +573,9 @@ class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
           Text(
             'Revisa los nombres antes de caracterizar cada relación. Puedes '
             'cambiarlos por iniciales o apodos.',
-            style: (textTheme.bodySmall ?? const TextStyle())
-                .copyWith(color: ContigoColors.inkMuted),
+            style: (textTheme.bodySmall ?? const TextStyle()).copyWith(
+              color: ContigoColors.inkMuted,
+            ),
           ),
           const SizedBox(height: 12),
           for (final person in journey.people)
@@ -587,8 +622,9 @@ class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
           Text(
             'Elige una persona para continuar. No necesitas terminar todo en '
             'una sola sesión.',
-            style: (textTheme.bodyMedium ?? const TextStyle())
-                .copyWith(color: ContigoColors.inkMuted),
+            style: (textTheme.bodyMedium ?? const TextStyle()).copyWith(
+              color: ContigoColors.inkMuted,
+            ),
           ),
           const SizedBox(height: 12),
           for (final person in journey.people)
@@ -609,8 +645,9 @@ class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
             Text(
               'Completa la caracterización de al menos una persona (sus 18 '
               'ítems) para generar el mapa.',
-              style: (textTheme.bodySmall ?? const TextStyle())
-                  .copyWith(color: ContigoColors.inkMuted),
+              style: (textTheme.bodySmall ?? const TextStyle()).copyWith(
+                color: ContigoColors.inkMuted,
+              ),
             ),
           ],
           const SizedBox(height: 8),
@@ -661,9 +698,12 @@ class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
     final progress = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Pregunta $step de 19',
-            style: (textTheme.bodySmall ?? const TextStyle())
-                .copyWith(color: ContigoColors.inkMuted)),
+        Text(
+          'Pregunta $step de 19',
+          style: (textTheme.bodySmall ?? const TextStyle()).copyWith(
+            color: ContigoColors.inkMuted,
+          ),
+        ),
         const SizedBox(height: 8),
       ],
     );
@@ -677,13 +717,18 @@ class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
           children: [
             progress,
             ContigoCard(
-              child: Text('¿Quién es ${person.name} para ti?',
-                  style: textTheme.titleMedium),
+              child: Text(
+                '¿Quién es ${person.name} para ti?',
+                style: textTheme.titleMedium,
+              ),
             ),
             const SizedBox(height: 6),
-            Text('Elige el ámbito que mejor represente la relación actualmente.',
-                style: (textTheme.bodySmall ?? const TextStyle())
-                    .copyWith(color: ContigoColors.inkMuted)),
+            Text(
+              'Elige el ámbito que mejor represente la relación actualmente.',
+              style: (textTheme.bodySmall ?? const TextStyle()).copyWith(
+                color: ContigoColors.inkMuted,
+              ),
+            ),
             const SizedBox(height: 12),
             for (final type in RelationshipType.values)
               Padding(
@@ -702,7 +747,9 @@ class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
 
     // Pasos 2..19: los 18 ítems de la relación.
     final itemIdx = _itemIndex - 1;
-    final saved = person.answers.length > itemIdx ? person.answers[itemIdx] : null;
+    final saved = person.answers.length > itemIdx
+        ? person.answers[itemIdx]
+        : null;
     final selected = _pendingAnswer ?? saved;
     final isLastItem = itemIdx == relationshipItemCount - 1;
     return SingleChildScrollView(
@@ -712,8 +759,10 @@ class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
         children: [
           progress,
           ContigoCard(
-            child: Text(relationshipQuestions[itemIdx],
-                style: textTheme.titleMedium),
+            child: Text(
+              relationshipQuestions[itemIdx],
+              style: textTheme.titleMedium,
+            ),
           ),
           const SizedBox(height: 12),
           for (var i = 0; i < relationshipScale.length; i++)
@@ -739,7 +788,7 @@ class _NetworkBuilderScreenState extends ConsumerState<NetworkBuilderScreen> {
             label: 'Guardar y continuar después',
             variant: ContigoButtonVariant.ghost,
             fullWidth: true,
-            onPressed: () => context.goNamed(AppRoute.pcsHome),
+            onPressed: () => context.goBack(AppRoute.pcsHome),
           ),
         ],
       ),
@@ -803,8 +852,9 @@ class _ReviewRow extends StatefulWidget {
 
 class _ReviewRowState extends State<_ReviewRow> {
   bool _editing = false;
-  late final TextEditingController _c =
-      TextEditingController(text: widget.person.name);
+  late final TextEditingController _c = TextEditingController(
+    text: widget.person.name,
+  );
 
   @override
   void dispose() {
@@ -855,12 +905,17 @@ class _ReviewRowState extends State<_ReviewRow> {
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                      child:
-                          Text(widget.person.name, style: textTheme.titleSmall)),
+                    child: Text(
+                      widget.person.name,
+                      style: textTheme.titleSmall,
+                    ),
+                  ),
                   IconButton(
                     tooltip: 'Editar ${widget.person.name}',
-                    icon: const Icon(Icons.edit_outlined,
-                        color: ContigoColors.terracotta),
+                    icon: const Icon(
+                      Icons.edit_outlined,
+                      color: ContigoColors.terracotta,
+                    ),
                     onPressed: () => setState(() => _editing = true),
                   ),
                   IconButton(
@@ -897,9 +952,11 @@ class _SummaryRow extends StatelessWidget {
               backgroundColor: done
                   ? ContigoColors.notifReminderBg
                   : ContigoColors.notifQuestionsBg,
-              child: Icon(done ? Icons.check : Icons.person,
-                  color: done ? ContigoColors.sage : ContigoColors.terracotta,
-                  size: 18),
+              child: Icon(
+                done ? Icons.check : Icons.person,
+                color: done ? ContigoColors.sage : ContigoColors.terracotta,
+                size: 18,
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -910,8 +967,9 @@ class _SummaryRow extends StatelessWidget {
                   Text(
                     person.relationshipType?.wireValue ??
                         'Tipo de relación pendiente',
-                    style: (textTheme.bodySmall ?? const TextStyle())
-                        .copyWith(color: ContigoColors.inkMuted),
+                    style: (textTheme.bodySmall ?? const TextStyle()).copyWith(
+                      color: ContigoColors.inkMuted,
+                    ),
                   ),
                 ],
               ),
@@ -920,10 +978,11 @@ class _SummaryRow extends StatelessWidget {
               done
                   ? 'Completa'
                   : person.status == PersonStatus.inProgress
-                      ? 'En progreso ($answered/$relationshipItemCount)'
-                      : 'Pendiente',
-              style: (textTheme.labelMedium ?? const TextStyle())
-                  .copyWith(color: ContigoColors.inkMuted),
+                  ? 'En progreso ($answered/$relationshipItemCount)'
+                  : 'Pendiente',
+              style: (textTheme.labelMedium ?? const TextStyle()).copyWith(
+                color: ContigoColors.inkMuted,
+              ),
             ),
           ],
         ),
@@ -953,8 +1012,9 @@ class _CategoryOption extends StatelessWidget {
         constraints: const BoxConstraints(minHeight: 52),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color:
-              selected ? ContigoColors.notifQuestionsBg : ContigoColors.surface,
+          color: selected
+              ? ContigoColors.notifQuestionsBg
+              : ContigoColors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected

@@ -33,7 +33,7 @@ class SupportButton extends StatelessWidget {
   /// Botón del PCS: abre el modo crisis.
   factory SupportButton.pcs(BuildContext context) => SupportButton(
         label: 'Necesito apoyo',
-        onPressed: () => context.goNamed(AppRoute.crisisMode),
+        onPressed: () => context.pushNamed(AppRoute.crisisMode),
       );
 
   /// Botón del cuidador: abre el plan de acompañamiento si [enabled].
@@ -41,7 +41,7 @@ class SupportButton extends StatelessWidget {
       SupportButton(
         label: 'Proveer apoyo',
         onPressed: enabled
-            ? () => context.goNamed(AppRoute.caregiverSupportPlan)
+            ? () => context.pushNamed(AppRoute.caregiverSupportPlan)
             : null,
       );
 

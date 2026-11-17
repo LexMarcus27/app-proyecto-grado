@@ -57,7 +57,7 @@ void main() {
     // Dejó la bienvenida y navegó al mapa (ruta de "Tu mapa de red").
     expect(find.text('Antes de empezar, reconoce tu red'), findsNothing);
     expect(
-      container.read(routerProvider).routeInformationProvider.value.uri.path,
+      container.read(routerProvider).state.uri.path,
       AppPath.networkBuilder,
     );
     final journey =

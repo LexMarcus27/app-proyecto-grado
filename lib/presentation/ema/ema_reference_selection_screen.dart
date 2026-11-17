@@ -98,7 +98,7 @@ class _EmaReferenceSelectionScreenState
       // Camino sin vínculo del primer registro (tarea 2.16): vista compartida
       // con la copia del prototipo y las dos acciones.
       return EmaNoLinkFirstRunView(
-        onOpenNetwork: () => context.goNamed(AppRoute.networkMap),
+        onOpenNetwork: () => context.pushNamed(AppRoute.networkMap),
         onContinueToday: () => _continueToday(context, journey),
       );
     }

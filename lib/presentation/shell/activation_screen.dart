@@ -225,14 +225,14 @@ class _ActivationScreenState extends ConsumerState<ActivationScreen> {
                     Center(
                       child: TextButton(
                         onPressed: () =>
-                            context.goNamed(AppRoute.componentGallery),
+                            context.pushNamed(AppRoute.componentGallery),
                         child: const Text('Ver componentes'),
                       ),
                     ),
                     Center(
                       child: TextButton(
                         onPressed: () =>
-                            context.goNamed(AppRoute.demoControls),
+                            context.pushNamed(AppRoute.demoControls),
                         child: const Text('Controles de demostración'),
                       ),
                     ),

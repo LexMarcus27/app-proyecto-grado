@@ -82,7 +82,7 @@ class CaregiverHomeScreen extends ConsumerWidget {
               _LinkCard(
                 linked: linked,
                 pcsName: pcsName,
-                onTap: () => context.goNamed(AppRoute.caregiverLinkCheckIn),
+                onTap: () => context.pushNamed(AppRoute.caregiverLinkCheckIn),
               ),
               if (!linked)
                 const Padding(
@@ -106,7 +106,7 @@ class CaregiverHomeScreen extends ConsumerWidget {
                         : 'Lo que puedo saber para cuidar a quienes quiero',
                     icon: Icons.menu_book_outlined,
                     enabled: true,
-                    onTap: () => context.goNamed(AppRoute.caregiverLearning),
+                    onTap: () => context.pushNamed(AppRoute.caregiverLearning),
                   ),
                   _CaregiverTile(
                     title: pcsName != null
@@ -116,14 +116,14 @@ class CaregiverHomeScreen extends ConsumerWidget {
                     icon: Icons.support,
                     help: true,
                     enabled: linked,
-                    onTap: () => context.goNamed(AppRoute.caregiverSupportPlan),
+                    onTap: () => context.pushNamed(AppRoute.caregiverSupportPlan),
                   ),
                   _CaregiverTile(
                     title: 'Tejiendo vínculos',
                     subtitle: 'Cuidando mis relaciones',
                     icon: Icons.link,
                     enabled: linked,
-                    onTap: () => context.goNamed(AppRoute.caregiverConnections),
+                    onTap: () => context.pushNamed(AppRoute.caregiverConnections),
                   ),
                   _CaregiverTile(
                     title: pcsName != null
@@ -132,7 +132,7 @@ class CaregiverHomeScreen extends ConsumerWidget {
                     subtitle: 'Registra cómo está la relación',
                     icon: Icons.show_chart,
                     enabled: linked,
-                    onTap: () => context.goNamed(AppRoute.caregiverLinkCheckIn),
+                    onTap: () => context.pushNamed(AppRoute.caregiverLinkCheckIn),
                   ),
                 ],
               ),
@@ -408,7 +408,7 @@ class CaregiverDemoPanel extends ConsumerWidget {
             // rol PCS/Cuidador).
             Center(
               child: TextButton(
-                onPressed: () => context.goNamed(AppRoute.demoControls),
+                onPressed: () => context.pushNamed(AppRoute.demoControls),
                 child: const Text('Controles de demostración'),
               ),
             ),

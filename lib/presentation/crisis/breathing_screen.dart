@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
+import '../../app/navigation.dart';
 import '../../app/router.dart';
 import '../../app/theme.dart';
 import '../widgets/widgets.dart';
@@ -113,7 +113,7 @@ class _BreathingScreenState extends State<BreathingScreen>
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
-                onPressed: () => context.goNamed(AppRoute.crisisMode),
+                onPressed: () => context.goBack(AppRoute.crisisMode),
                 icon: const Icon(Icons.arrow_back, size: 20),
                 label: const Text('Volver a mi plan'),
               ),
@@ -200,14 +200,14 @@ class _BreathingScreenState extends State<BreathingScreen>
                     ContigoButton(
                       label: 'Terminé por ahora',
                       fullWidth: true,
-                      onPressed: () => context.goNamed(AppRoute.crisisMode),
+                      onPressed: () => context.goBack(AppRoute.crisisMode),
                     ),
                     const SizedBox(height: 10),
                     ContigoButton(
                       label: 'Probar otra habilidad',
                       variant: ContigoButtonVariant.secondary,
                       fullWidth: true,
-                      onPressed: () => context.goNamed(AppRoute.crisisMode),
+                      onPressed: () => context.goBack(AppRoute.crisisMode),
                     ),
                     const SizedBox(height: 10),
                     ContigoButton(

@@ -803,7 +803,7 @@ class _PersonDetailSheet extends ConsumerWidget {
                 final navigator = Navigator.of(context);
                 await selectConnectionPerson(ref, personId);
                 navigator.pop();
-                router.goNamed(
+                router.pushNamed(
                   AppRoute.connectionPerson,
                   queryParameters: {'p': personId},
                 );
@@ -882,7 +882,7 @@ class _PersonDetailSheet extends ConsumerWidget {
             onPressed: () {
               final router = GoRouter.of(context);
               Navigator.of(context).pop();
-              router.goNamed(
+              router.pushNamed(
                 AppRoute.networkBuilder,
                 queryParameters: {'edit': personId},
               );
@@ -1258,7 +1258,7 @@ class _UnbuiltState extends ConsumerWidget {
               ContigoButton(
                 label: 'Construir mi mapa',
                 fullWidth: true,
-                onPressed: () => context.goNamed(AppRoute.networkBuilder),
+                onPressed: () => context.pushNamed(AppRoute.networkBuilder),
               ),
             ],
           ),

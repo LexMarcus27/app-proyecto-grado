@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../app/navigation.dart';
 import '../../app/router.dart';
 import '../../domain/connection/connection.dart';
 import '../../domain/journey/journey.dart';
@@ -77,7 +78,7 @@ class _ConnectionHubScreenState extends ConsumerState<ConnectionHubScreen> {
   void _openStep(ConnectionStep step) {
     switch (step) {
       case ConnectionStep.received:
-        context.goNamed(AppRoute.caringInbox);
+        context.pushNamed(AppRoute.caringInbox);
       case ConnectionStep.skills:
         _openSkills();
       case ConnectionStep.message:
@@ -103,7 +104,7 @@ class _ConnectionHubScreenState extends ConsumerState<ConnectionHubScreen> {
       backLabel: _peopleView ? 'Volver a Tejiendo vínculos' : 'Volver al inicio',
       onBack: () => _peopleView
           ? setState(() => _peopleView = false)
-          : context.goNamed(AppRoute.pcsHome),
+          : context.goBack(AppRoute.pcsHome),
       moduleLabel: 'Tejiendo vínculos',
       moduleIcon: Icons.link,
       child: journeyAsync.when(
@@ -382,14 +383,14 @@ class _ConnectionPersonSelectorState
     if (launch == null) return;
     await selectConnectionPerson(ref, person.id);
     if (!mounted) return;
-    context.goNamed(
+    context.pushNamed(
       AppRoute.connectionPerson,
       queryParameters: {'p': launch.personId, 'a': launch.action.wireValue},
     );
   }
 
   void _openNetwork() {
-    context.goNamed(
+    context.pushNamed(
       widget.journey.mapGenerated ? AppRoute.networkMap : AppRoute.networkBuilder,
     );
   }
