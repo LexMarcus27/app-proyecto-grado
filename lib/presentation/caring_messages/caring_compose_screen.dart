@@ -37,6 +37,9 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
   _ComposeView _view = _ComposeView.welcome;
   int _guidePage = 0;
 
+  /// Guion del video desplegado (parte 1 de la guía).
+  bool _showScript = false;
+
   /// `true` si la guía se abrió **desde el editor** (""Consultar ejemplos"" /
   /// ""Preguntas para inspirarme""): en ese caso el pie de la guía ofrece
   /// ""Volver a mi mensaje"" y regresar conserva el texto y las ideas añadidas.
@@ -147,6 +150,8 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
       _ComposeView.welcome => 'Mensajes de cuidado',
     };
 
+    final inGuide = _view == _ComposeView.guide && linkActive;
+
     return Scaffold(
       backgroundColor: ContigoColors.canvas,
       body: SafeArea(
@@ -154,49 +159,69 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const StatusBar(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 0, 16, 4),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () => context.goBack(AppRoute.caregiverConnections),
-                    icon: const Icon(Icons.arrow_back),
-                    tooltip: 'Volver a Tejiendo vínculos',
-                  ),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Cabecera del recurso (propuesta M26).
+                    Row(
                       children: [
-                        Text(
-                          'Para $_pcsName',
-                          style: (textTheme.labelMedium ?? const TextStyle())
-                              .copyWith(color: ContigoColors.inkMuted),
+                        ResourceCircleButton(
+                          icon: Icons.arrow_back,
+                          tooltip: 'Volver a Tejiendo vínculos',
+                          onPressed: () =>
+                              context.goBack(AppRoute.caregiverConnections),
                         ),
-                        // Título serif del recurso (`.caring-header h1`).
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontFamily: ContigoTheme.displayFontFamily,
-                            fontFamilyFallback:
-                                ContigoTheme.displayFontFallback,
-                            fontSize: 25,
-                            height: 30 / 25,
-                            fontWeight: FontWeight.w700,
-                            color: ContigoColors.ink,
+                        const SizedBox(width: 12),
+                        const Flexible(
+                          child: ResourceChip(
+                            label: 'Para $_pcsName',
+                            palette: _palette,
+                            leading: HomeAvatar(index: 0, size: 28),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                child: linkActive
-                    ? _buildView(context, textTheme, draft, controller)
-                    : _buildRevoked(textTheme),
+                    const SizedBox(height: 22),
+                    Text(
+                      'MENSAJES DE CUIDADO',
+                      style: TextStyle(
+                        fontSize: 13,
+                        height: 18 / 13,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                        color: _palette.accent,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    if (inGuide) ...[
+                      ResourceProgress(
+                        total: _guideTitles.length,
+                        current: _guidePage,
+                        palette: _palette,
+                        semanticLabel:
+                            'Avance de la guía. Parte ${_guidePage + 1} de '
+                            '${_guideTitles.length}',
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+                    ResourceStepHeading(
+                      number: inGuide ? _guidePage + 1 : null,
+                      title: title,
+                      caption: inGuide
+                          ? 'Parte ${_guidePage + 1} de ${_guideTitles.length}'
+                          : null,
+                      palette: _palette,
+                    ),
+                    const SizedBox(height: 22),
+                    if (linkActive)
+                      _buildView(context, textTheme, draft, controller)
+                    else
+                      _buildRevoked(textTheme),
+                  ],
+                ),
               ),
             ),
             _buildFooter(
@@ -380,51 +405,80 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
   }
 
   Widget _buildGuide(TextTheme textTheme, draft, controller) {
-    final children = <Widget>[
-      _GuideProgress(page: _guidePage, total: _guideTitles.length),
-      const SizedBox(height: 12),
-    ];
+    final children = <Widget>[];
     switch (_guidePage) {
       case 0:
         children.addAll([
           StoryVideo(
             asset: 'assets/media/caring-messages/metafora.mp4',
             title: 'Mensajes de cuidado: un flotador en medio del mar',
-          ),
-          const SizedBox(height: 8),
-          // Guion del video, verbatim (portado del prototipo).
-          Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              tilePadding: EdgeInsets.zero,
-              title: Text('Leer el guion del video', style: textTheme.titleSmall),
+            accent: ContigoColors.brand,
+            playAtCorner: true,
+            footer: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (final line in CaringContent.videoScript)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Text(line, style: textTheme.bodyMedium),
+                // Guion del video, verbatim (portado del prototipo).
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: ContigoColors.ink,
+                    side: const BorderSide(color: Color(0xFFDDD3C8)),
+                    shape: const StadiumBorder(),
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    textStyle: const TextStyle(
+                      fontFamily: ContigoTheme.bodyFontFamily,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
+                  onPressed: () => setState(() => _showScript = !_showScript),
+                  icon: Icon(
+                    _showScript ? Icons.expand_less : Icons.format_quote,
+                    size: 18,
+                    color: ContigoColors.inkMuted,
+                  ),
+                  label: Text(
+                    _showScript ? 'Ocultar el guion' : 'Leer el guion del video',
+                  ),
+                ),
+                if (_showScript) ...[
+                  const SizedBox(height: 12),
+                  for (final line in CaringContent.videoScript)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 10),
+                      child: Text(line, style: resourceBody),
+                    ),
+                ],
               ],
             ),
           ),
-          const SizedBox(height: 12),
-          _GuideSection(
+          const SizedBox(height: 18),
+          ResourceCard(
             title: '¿Qué son?',
-            // Como React (`replace(/^¿Qué son\?\s*/, "")`): sin repetir el título.
-            paragraphs: [
-              for (final text in CaringContent.definition)
-                text.replaceFirst(RegExp(r'^¿Qué son\?\s*'), ''),
+            icon: Icons.waves,
+            children: [
+              for (var i = 0; i < CaringContent.definition.length; i++)
+                Padding(
+                  padding: EdgeInsets.only(top: i == 0 ? 0 : 14),
+                  child: ResourceEmphasisText(
+                    // Como React (`replace(/^¿Qué son\?\s*/, "")`): sin repetir
+                    // el título.
+                    text: CaringContent.definition[i]
+                        .replaceFirst(RegExp(r'^¿Qué son\?\s*'), ''),
+                    emphasis: 'Solo están ahí, flotando a tu lado.',
+                    emphasisColor: _palette.accent,
+                    italicSerif: true,
+                  ),
+                ),
             ],
           ),
-          _GuideSection(
-            title: 'Qué no son',
-            lilac: true,
-            paragraphs: [CaringContent.notAdvice],
-          ),
+          const SizedBox(height: 16),
+          const _NotCard(title: 'Qué no son', text: CaringContent.notAdvice),
         ]);
       case 1:
-        for (final c in CaringContent.characteristics) {
-          children.add(_GuideSection(title: c.title, paragraphs: c.paragraphs));
+        for (var i = 0; i < CaringContent.characteristics.length; i++) {
+          final c = CaringContent.characteristics[i];
+          if (i > 0) children.add(const SizedBox(height: 16));
+          children.add(_CharacteristicCard(characteristic: c));
         }
       case 2:
         children.add(Text(
@@ -482,15 +536,20 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
           style: (textTheme.bodySmall ?? const TextStyle())
               .copyWith(color: ContigoColors.inkMuted),
         ));
-        for (var i = 0; i < CaringContent.questions.length; i++) {
-          children.add(_QuestionRow(
-            question: CaringContent.questions[i],
-            selected: draft.selectedQuestions.contains(i),
-            note: draft.notes[i] ?? '',
-            onToggle: () => controller.toggleQuestion(i),
-            onNote: (v) => controller.setNote(i, v),
-          ));
-        }
+        children.add(const SizedBox(height: 12));
+        children.add(ResourceCard(
+          padding: const EdgeInsets.fromLTRB(18, 8, 18, 18),
+          children: [
+            for (var i = 0; i < CaringContent.questions.length; i++)
+              _QuestionRow(
+                question: CaringContent.questions[i],
+                selected: draft.selectedQuestions.contains(i),
+                note: draft.notes[i] ?? '',
+                onToggle: () => controller.toggleQuestion(i),
+                onNote: (v) => controller.setNote(i, v),
+              ),
+          ],
+        ));
         children.add(const SizedBox(height: 10));
         children.add(CompanionNote(expression: CompanionExpression.thoughtful, child: Text(CaringContent.honesty)));
         if (_guideReviewed) {
@@ -596,32 +655,25 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
   /// "Cómo empezó todo": los orígenes del prototipo con sus ilustraciones y
   /// párrafos verbatim. Disponible solo tras recorrer las seis partes de la
   /// guía. Las imágenes se toman del bundle (carpeta `caring-messages/`).
+  /// "Cómo empezó todo": los orígenes del prototipo con sus ilustraciones y
+  /// párrafos verbatim, como línea de tiempo (propuesta M26). Disponible solo
+  /// tras recorrer las seis partes de la guía. Las imágenes se toman del bundle
+  /// (carpeta `caring-messages/`).
   Widget _buildOrigin(TextTheme textTheme) {
+    const origins = CaringContent.origins;
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final origin in CaringContent.origins) ...[
-          Text(origin.title, style: textTheme.titleMedium),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: Image.asset(
-              'assets/media/caring-messages/${origin.image}',
-              semanticLabel: origin.alt,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stack) => const SizedBox.shrink(),
-            ),
+        for (var i = 0; i < origins.length; i++)
+          _TimelineEntry(
+            origin: origins[i],
+            date: _originDates[i],
+            last: i == origins.length - 1,
           ),
-          const SizedBox(height: 8),
-          for (final p in origin.paragraphs) ...[
-            Text(p, style: textTheme.bodyMedium),
-            const SizedBox(height: 6),
-          ],
-          const SizedBox(height: 12),
-        ],
       ],
     );
   }
+
   Widget _buildRevoked(TextTheme textTheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -669,108 +721,78 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
           ),
         ]);
       case _ComposeView.guide:
-        final navRow = Row(
-          children: [
-            Expanded(
-              child: ContigoButton(
-                label: 'Anterior',
-                variant: ContigoButtonVariant.secondary,
-                fullWidth: true,
-                onPressed: () => setState(() {
-                  if (_guidePage == 0) {
-                    _view = _ComposeView.welcome;
-                  } else {
-                    _guidePage -= 1;
-                  }
-                  _notice = null;
-                }),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: ContigoButton(
-                label: _guidePage == _guideTitles.length - 1
-                    ? 'Redactar mi mensaje'
-                    : 'Siguiente',
-                fullWidth: true,
-                onPressed: () => setState(() {
-                  if (_guidePage == _guideTitles.length - 1) {
+        final lastPage = _guidePage == _guideTitles.length - 1;
+        return ResourceBottomBar(
+          palette: _palette,
+          nextLabel: lastPage ? 'Redactar mi mensaje' : 'Siguiente',
+          showNextChevron: !lastPage,
+          onBack: () => setState(() {
+            if (_guidePage == 0) {
+              _view = _ComposeView.welcome;
+            } else {
+              _guidePage -= 1;
+            }
+            _notice = null;
+          }),
+          onNext: () => setState(() {
+            if (lastPage) {
+              _view = _ComposeView.compose;
+              _guideFromCompose = false;
+            } else {
+              _guidePage += 1;
+              _visitedGuidePages.add(_guidePage);
+            }
+            _notice = null;
+            WidgetsBinding.instance
+                .addPostFrameCallback((_) => _syncGuideReviewed());
+          }),
+          // Si la guía se abrió desde el editor («Consultar ejemplos» /
+          // «Preguntas para inspirarme»), se ofrece un regreso directo a la
+          // redacción que conserva el texto y las ideas añadidas.
+          below: _guideFromCompose
+              ? TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: ContigoColors.brand,
+                    textStyle: const TextStyle(
+                      fontFamily: ContigoTheme.bodyFontFamily,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  onPressed: () => setState(() {
                     _view = _ComposeView.compose;
                     _guideFromCompose = false;
-                  } else {
-                    _guidePage += 1;
-                    _visitedGuidePages.add(_guidePage);
-                  }
-                  _notice = null;
-                  WidgetsBinding.instance
-                      .addPostFrameCallback((_) => _syncGuideReviewed());
-                }),
-              ),
-            ),
-          ],
-        );
-        // Si la guía se abrió desde el editor (""Consultar ejemplos"" /
-        // ""Preguntas para inspirarme""), ofrecer un regreso directo a la
-        // redacción que conserva el texto y las ideas añadidas. La navegación
-        // normal (Anterior/Siguiente) se mantiene. Desde la bienvenida no se
-        // ofrece este atajo.
-        if (!_guideFromCompose) {
-          return Container(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-            decoration: const BoxDecoration(
-              color: ContigoColors.surface,
-              border:
-                  Border(top: BorderSide(color: ContigoColors.notifMeetingBg)),
-            ),
-            child: navRow,
-          );
-        }
-        return Container(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-          decoration: const BoxDecoration(
-            color: ContigoColors.surface,
-            border: Border(top: BorderSide(color: ContigoColors.notifMeetingBg)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              navRow,
-              const SizedBox(height: 10),
-              ContigoButton(
-                label: 'Volver a mi mensaje',
-                variant: ContigoButtonVariant.tertiary,
-                fullWidth: true,
-                onPressed: () => setState(() {
-                  _view = _ComposeView.compose;
-                  _guideFromCompose = false;
-                  _notice = null;
-                }),
-              ),
-            ],
-          ),
+                    _notice = null;
+                  }),
+                  child: const Text('Volver a mi mensaje'),
+                )
+              : null,
         );
       case _ComposeView.origin:
-        return _footerBar([
-          Expanded(
-            child: ContigoButton(
-              label: switch (_originReturn) {
-                _OriginReturn.compose => 'Volver a mi mensaje',
-                _OriginReturn.guide => 'Volver a la guía',
-                _OriginReturn.welcome => 'Volver al recurso',
-              },
-              variant: ContigoButtonVariant.secondary,
-              fullWidth: true,
-              // Vuelve al punto de origen conservando el borrador (F11).
-              onPressed: () => setState(() {
-                _view = switch (_originReturn) {
-                  _OriginReturn.compose => _ComposeView.compose,
-                  _OriginReturn.guide => _ComposeView.guide,
-                  _OriginReturn.welcome => _ComposeView.welcome,
-                };
-              }),
-            ),
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
+          decoration: const BoxDecoration(
+            color: Color(0xFFFAF7F3),
+            border: Border(top: BorderSide(color: Color(0xFFEDE5DC))),
           ),
-        ]);
+          child: ResourcePillButton(
+            label: switch (_originReturn) {
+              _OriginReturn.compose => 'Volver a mi mensaje',
+              _OriginReturn.guide => 'Volver a la guía',
+              _OriginReturn.welcome => 'Volver al recurso',
+            },
+            color: ContigoColors.brand,
+            outlined: true,
+            // Vuelve al punto de origen conservando el borrador (F11).
+            onPressed: () => setState(() {
+              _view = switch (_originReturn) {
+                _OriginReturn.compose => _ComposeView.compose,
+                _OriginReturn.guide => _ComposeView.guide,
+                _OriginReturn.welcome => _ComposeView.welcome,
+              };
+            }),
+          ),
+        );
       case _ComposeView.compose:
         final composeBar = _footerBar([
           Expanded(
@@ -835,10 +857,10 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
 
   Widget _footerBar(List<Widget> children) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
       decoration: const BoxDecoration(
-        color: ContigoColors.surface,
-        border: Border(top: BorderSide(color: ContigoColors.notifMeetingBg)),
+        color: Color(0xFFFAF7F3),
+        border: Border(top: BorderSide(color: Color(0xFFEDE5DC))),
       ),
       child: Row(children: children),
     );
@@ -904,52 +926,40 @@ class _CaringComposeScreenState extends ConsumerState<CaringComposeScreen> {
   }
 }
 
-class _GuideProgress extends StatelessWidget {
-  const _GuideProgress({required this.page, required this.total});
-  final int page;
-  final int total;
+/// Paleta del recurso de mensajes de cuidado (propuesta M26).
+const ResourcePalette _palette = ResourcePalette.caring;
 
-  @override
-  Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            for (var i = 0; i < total; i++) ...[
-              Expanded(
-                child: Container(
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: i <= page
-                        ? ContigoColors.sage
-                        : ContigoColors.notifMeetingBg,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              if (i < total - 1) const SizedBox(width: 4),
-            ],
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'Parte ${page + 1} de $total',
-          style: (textTheme.bodySmall ?? const TextStyle())
-              .copyWith(color: ContigoColors.inkMuted),
-        ),
-      ],
-    );
-  }
-}
+/// Lila de las tarjetas «Qué no son» / «Y muestran que».
+const Color _lilac = Color(0xFFEEE6F2);
+const Color _lilacText = Color(0xFF5D49A5);
+
+/// Fechas de la línea de tiempo de los orígenes, en el orden de
+/// [CaringContent.origins] (`null` si la entrada no lleva fecha).
+const List<String?> _originDates = [
+  'Diciembre de 1944',
+  null,
+  'Finales de los años 60 · 2001',
+];
+
+/// Íconos de las secciones de la guía, por título.
+const Map<String, IconData> _sectionIcons = {
+  'Mostrar cuidado': Icons.favorite_border,
+  'Reconocer lo difícil': Icons.volunteer_activism_outlined,
+  'Celebrar los avances': Icons.celebration_outlined,
+  'Dar ánimo': Icons.wb_sunny_outlined,
+  'Recordar la relación': Icons.photo_album_outlined,
+  'Un momento para conectar': Icons.self_improvement,
+  'Estos mensajes buscan': Icons.flag_outlined,
+  'Y muestran que': Icons.visibility_outlined,
+  'Ya conoces los mensajes de cuidado': Icons.auto_stories_outlined,
+};
 
 /// Tipo de lista de una sección de la guía.
 enum _GuideList { none, ordered, unordered }
 
-/// Sección narrativa de la guía (`.caring-section`): borde lateral, fondo
-/// suave y esquinas asimétricas. La variante [lilac] reproduce
-/// `.caring-section--sage` (lila `#EEE6F2`, borde `#9B84A8`).
+/// Sección de la guía como tarjeta (propuesta M26): ícono en círculo, título
+/// serif y párrafos o lista. La variante [lilac] reproduce el fondo lila
+/// (`.caring-section--sage` del prototipo, `#EEE6F2`).
 class _GuideSection extends StatelessWidget {
   const _GuideSection({
     required this.title,
@@ -965,18 +975,6 @@ class _GuideSection extends StatelessWidget {
   final _GuideList list;
   final List<Widget> children;
 
-  static const TextStyle _titleStyle = TextStyle(
-    fontSize: 18,
-    height: 25 / 18,
-    fontWeight: FontWeight.w800,
-    color: Color(0xFF674641),
-  );
-  static const TextStyle _bodyStyle = TextStyle(
-    fontSize: 16,
-    height: 25 / 16,
-    color: ContigoColors.ink,
-  );
-
   @override
   Widget build(BuildContext context) {
     final items = <Widget>[];
@@ -984,75 +982,358 @@ class _GuideSection extends StatelessWidget {
       final text = paragraphs[i];
       if (list == _GuideList.none) {
         items.add(Padding(
-          padding: EdgeInsets.only(top: i == 0 ? 0 : 16),
-          child: Text(text, style: _bodyStyle),
+          padding: EdgeInsets.only(top: i == 0 ? 0 : 14),
+          child: Text(text, style: resourceBody),
         ));
       } else {
         items.add(Padding(
-          padding: EdgeInsets.only(top: i == 0 ? 10 : 8, left: 4),
+          padding: EdgeInsets.only(top: i == 0 ? 0 : 10),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              SizedBox(
-                width: 22,
-                child: Text(
-                  list == _GuideList.ordered ? '${i + 1}.' : '•',
-                  style: _bodyStyle.copyWith(
-                    color: const Color(0xFF687D5E),
-                    fontWeight: FontWeight.w700,
+              if (list == _GuideList.ordered)
+                Container(
+                  width: 26,
+                  height: 26,
+                  margin: const EdgeInsets.only(right: 12),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: lilac ? Colors.white : _palette.soft,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '${i + 1}',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: lilac ? _lilacText : _palette.accent,
+                    ),
+                  ),
+                )
+              else
+                Container(
+                  width: 7,
+                  height: 7,
+                  margin: const EdgeInsets.only(top: 9, right: 12, left: 4),
+                  decoration: BoxDecoration(
+                    color: lilac ? _lilacText : _palette.accent,
+                    shape: BoxShape.circle,
                   ),
                 ),
-              ),
-              Expanded(child: Text(text, style: _bodyStyle)),
+              Expanded(child: Text(text, style: resourceBody)),
             ],
           ),
         ));
       }
     }
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 9),
-      decoration: BoxDecoration(
-        color: lilac ? const Color(0xFFEEE6F2) : const Color(0xFFFFFCF8),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(6),
-          topRight: Radius.circular(22),
-          bottomLeft: Radius.circular(22),
-          bottomRight: Radius.circular(22),
-        ),
-        border: Border.all(color: const Color(0xFFE3D8CD)),
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: ResourceCard(
+        title: title,
+        icon: _sectionIcons[title],
+        iconColor: lilac ? _lilacText : _palette.accent,
+        iconBackground: lilac ? Colors.white : _palette.soft,
+        titleColor: lilac ? _lilacText : null,
+        background: lilac ? _lilac : Colors.white,
+        bordered: !lilac,
+        children: [...items, ...children],
       ),
-      child: ClipRRect(
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(5),
-          topRight: Radius.circular(21),
-          bottomLeft: Radius.circular(21),
-          bottomRight: Radius.circular(21),
+    );
+  }
+}
+
+/// «Qué no son»: tarjeta lila con ✕ en círculo blanco.
+class _NotCard extends StatelessWidget {
+  const _NotCard({required this.title, required this.text});
+
+  final String title;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 18, 20, 20),
+      decoration: BoxDecoration(
+        color: _lilac,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.close, size: 20, color: _lilacText),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: resourceSerif.copyWith(
+                    fontSize: 21,
+                    height: 26 / 21,
+                    color: _lilacText,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(text, style: resourceBody),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Íconos de las características, en el orden de
+/// [CaringContent.characteristics].
+const Map<String, IconData> _characteristicIcons = {
+  'No piden algo a cambio': Icons.favorite_border,
+  'Pertenencia': Icons.people_outline,
+  'Son cortos': Icons.schedule,
+  'Son constantes': Icons.waves,
+};
+
+/// Tarjeta de una característica de los mensajes (parte 2 de la guía).
+///
+/// - «No piden algo a cambio»: las frases de lo que no hacen van con ✕ y la
+///   última como conclusión.
+/// - «Son constantes»: fondo salvia, mensajes apilados y la frase final en
+///   serif cursiva.
+class _CharacteristicCard extends StatelessWidget {
+  const _CharacteristicCard({required this.characteristic});
+
+  final CaringCharacteristic characteristic;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = characteristic;
+    final p = c.paragraphs;
+    final constant = c.title == 'Son constantes';
+    final List<Widget> body;
+    if (c.title == 'No piden algo a cambio' && p.length > 1) {
+      body = [
+        for (final line in p.sublist(0, p.length - 1))
+          Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Padding(
+                  padding: EdgeInsets.only(top: 3, right: 12),
+                  child: Icon(Icons.close, size: 18, color: ContigoColors.critical),
+                ),
+                Expanded(child: Text(line, style: resourceBody)),
+              ],
+            ),
+          ),
+        const SizedBox(height: 4),
+        Text(p.last, style: resourceBody),
+      ];
+    } else if (constant && p.length > 1) {
+      body = [
+        Text(p.first, style: resourceBody),
+        const SizedBox(height: 16),
+        const _MessageStack(),
+        const SizedBox(height: 16),
+        Text(
+          p.last,
+          style: resourceSerif.copyWith(
+            fontSize: 21,
+            height: 28 / 21,
+            fontWeight: FontWeight.w500,
+            fontStyle: FontStyle.italic,
+            color: _palette.accent,
+          ),
         ),
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                width: 4,
-                color: lilac ? const Color(0xFF9B84A8) : const Color(0xFFBD8175),
-              ),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 18, 18, 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+      ];
+    } else {
+      body = [
+        for (var i = 0; i < p.length; i++)
+          Padding(
+            padding: EdgeInsets.only(top: i == 0 ? 0 : 14),
+            child: Text(p[i], style: resourceBody),
+          ),
+      ];
+    }
+    return ResourceCard(
+      title: c.title,
+      icon: _characteristicIcons[c.title],
+      iconColor: _palette.accent,
+      iconBackground: constant ? Colors.white : _palette.soft,
+      background: constant ? _palette.soft : Colors.white,
+      bordered: !constant,
+      children: body,
+    );
+  }
+}
+
+/// Tres pastillas «Un mensaje» escalonadas que se desvanecen (decorativas).
+class _MessageStack extends StatelessWidget {
+  const _MessageStack();
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (var i = 0; i < 3; i++)
+            Padding(
+              padding: EdgeInsets.only(left: 30.0 * i, bottom: 8),
+              child: Opacity(
+                opacity: 1 - i * 0.22,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(title, style: _titleStyle),
-                      const SizedBox(height: 10),
-                      ...items,
-                      ...children,
+                      Icon(Icons.favorite_border, size: 14, color: ContigoColors.brand),
+                      SizedBox(width: 8),
+                      Text(
+                        'Un mensaje',
+                        style: TextStyle(fontSize: 14, color: ContigoColors.ink),
+                      ),
                     ],
                   ),
                 ),
               ),
-            ],
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Entrada de la línea de tiempo de «Cómo empezó todo»: nodo con anillo y
+/// línea vertical, fecha opcional, título serif, ilustración y párrafos.
+class _TimelineEntry extends StatelessWidget {
+  const _TimelineEntry({
+    required this.origin,
+    required this.date,
+    required this.last,
+  });
+
+  final CaringOrigin origin;
+  final String? date;
+  final bool last;
+
+  /// Cita de la carta del estudio de Motto, resaltada en serif cursiva.
+  static const String _quote =
+      '"Han pasado unos meses desde que estuviste en el hospital y esperamos '
+      'que estés bien. Si quieres escribirnos, nos daría gusto saber de ti"';
+
+  @override
+  Widget build(BuildContext context) {
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SizedBox(
+            width: 26,
+            child: Column(
+              children: [
+                const SizedBox(height: 4),
+                Container(
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: _palette.accent, width: 2.4),
+                  ),
+                  alignment: Alignment.center,
+                  child: Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: _palette.accent,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    color: last ? Colors.transparent : _palette.dotted,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: last ? 0 : 28),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (date != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: _palette.soft,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        date!,
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: _palette.accent,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  Text(
+                    origin.title,
+                    style: resourceSerif.copyWith(fontSize: 24, height: 30 / 24),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: const Color(0xFFE8DFD5)),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Image.asset(
+                      'assets/media/caring-messages/${origin.image}',
+                      semanticLabel: origin.alt,
+                      fit: BoxFit.cover,
+                      width: double.infinity,
+                      errorBuilder: (context, error, stack) =>
+                          const SizedBox.shrink(),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  for (var i = 0; i < origin.paragraphs.length; i++)
+                    Padding(
+                      padding: EdgeInsets.only(top: i == 0 ? 0 : 14),
+                      child: ResourceEmphasisText(
+                        text: origin.paragraphs[i],
+                        emphasis: _quote,
+                        emphasisColor: _palette.accent,
+                        italicSerif: true,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1065,19 +1346,34 @@ class _ExampleRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Row(
+    // Idea en su propio recuadro, con el botón debajo (propuesta M26).
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.fromLTRB(16, 14, 10, 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7F2EC),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: Text(text, style: textTheme.bodyMedium)),
-          const SizedBox(width: 8),
-          ContigoButton(
-            label: 'Añadir idea al borrador',
-            variant: ContigoButtonVariant.secondary,
-            small: true,
-            onPressed: onAdd,
+          Text(text, style: resourceBody),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              style: TextButton.styleFrom(
+                foregroundColor: ContigoColors.brand,
+                textStyle: const TextStyle(
+                  fontFamily: ContigoTheme.bodyFontFamily,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              onPressed: onAdd,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Añadir idea al borrador'),
+            ),
           ),
         ],
       ),

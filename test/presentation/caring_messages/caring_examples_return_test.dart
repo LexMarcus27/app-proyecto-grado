@@ -102,6 +102,7 @@ void main() {
     expect(find.text('Volver a mi mensaje'), findsNothing);
     // Navegación normal de la guía.
     expect(find.text('Siguiente'), findsOneWidget);
-    expect(find.text('Anterior'), findsOneWidget);
+    // «Anterior» es el botón circular de la barra inferior (propuesta M26).
+    expect(find.byTooltip('Anterior'), findsOneWidget);
   });
 }

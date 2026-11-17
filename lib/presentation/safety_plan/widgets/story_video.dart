@@ -13,13 +13,34 @@ import '../../../app/theme.dart';
 /// continuar con el contenido. Conserva la nota "Puedes pausar el video y
 /// avanzar a tu propio ritmo".
 class StoryVideo extends StatefulWidget {
-  const StoryVideo({super.key, required this.asset, required this.title});
+  const StoryVideo({
+    super.key,
+    required this.asset,
+    required this.title,
+    this.accent = ContigoColors.terracotta,
+    this.caption,
+    this.playAtCorner = false,
+    this.footer,
+  });
 
   /// Ruta del asset de video empacado (p. ej. `AppMedia.safetyPlanStoryVideo1`).
   final String asset;
 
   /// Título de la página, usado como etiqueta de accesibilidad del video.
   final String title;
+
+  /// Color del botón de reproducir.
+  final Color accent;
+
+  /// Leyenda bajo el video («Video · …»). Por defecto, `Video · [title]`.
+  final String? caption;
+
+  /// Si es `true`, el botón de reproducir se ubica en la esquina inferior
+  /// derecha (mensajes de cuidado) en lugar del centro.
+  final bool playAtCorner;
+
+  /// Contenido adicional dentro de la tarjeta, bajo la leyenda.
+  final Widget? footer;
 
   @override
   State<StoryVideo> createState() => _StoryVideoState();
@@ -101,81 +122,162 @@ class _StoryVideoState extends State<StoryVideo> {
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
     final controller = _controller;
+    final ready = controller != null && controller.value.isInitialized;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (_failed)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: ContigoColors.notifMeetingBg,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Semantics(
-              liveRegion: true,
-              child: Text(
-                'No pudimos cargar el video. Puedes abrirlo por separado o '
-                'continuar con el contenido.',
-                style: (textTheme.bodySmall ?? const TextStyle())
-                    .copyWith(color: ContigoColors.clay),
-              ),
-            ),
-          )
-        else if (controller != null && controller.value.isInitialized)
-          Semantics(
-            label: 'Video: ${widget.title}',
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: AspectRatio(
-                aspectRatio: controller.value.aspectRatio,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    VideoPlayer(controller),
-                    GestureDetector(
-                      onTap: _togglePlay,
-                      child: AnimatedOpacity(
-                        opacity: controller.value.isPlaying ? 0 : 1,
-                        duration: const Duration(milliseconds: 150),
-                        child: Container(
-                          color: Colors.black26,
-                          alignment: Alignment.center,
-                          child: Icon(
-                            controller.value.isPlaying
-                                ? Icons.pause_circle_filled
-                                : Icons.play_circle_fill,
-                            size: 56,
-                            color: ContigoColors.surface,
-                          ),
-                        ),
+    Widget media;
+    if (_failed) {
+      media = Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        color: ContigoColors.notifMeetingBg,
+        child: Semantics(
+          liveRegion: true,
+          child: Text(
+            'No pudimos cargar el video. Puedes abrirlo por separado o '
+            'continuar con el contenido.',
+            style: (textTheme.bodySmall ?? const TextStyle())
+                .copyWith(color: ContigoColors.clay),
+          ),
+        ),
+      );
+    } else if (ready) {
+      final playing = controller.value.isPlaying;
+      media = Semantics(
+        label: 'Video: ${widget.title}',
+        child: AspectRatio(
+          aspectRatio: controller.value.aspectRatio,
+          child: GestureDetector(
+            onTap: _togglePlay,
+            child: Stack(
+              children: [
+                Positioned.fill(child: VideoPlayer(controller)),
+                Positioned.fill(
+                  child: AnimatedOpacity(
+                    opacity: playing ? 0 : 1,
+                    duration: const Duration(milliseconds: 150),
+                    child: Align(
+                      alignment: widget.playAtCorner
+                          ? const Alignment(0.92, 0.9)
+                          : Alignment.center,
+                      child: _PlayButton(
+                        color: widget.accent,
+                        playing: playing,
+                        onPressed: _togglePlay,
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          )
-        else
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: Container(
-              decoration: BoxDecoration(
-                color: ContigoColors.notifSocialBg,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              alignment: Alignment.center,
-              child: const CircularProgressIndicator(),
+              ],
             ),
           ),
-        const SizedBox(height: 8),
-        Text(
-          'Puedes pausar el video y avanzar a tu propio ritmo.',
-          style: (textTheme.bodySmall ?? const TextStyle())
-              .copyWith(color: ContigoColors.inkMuted),
         ),
-      ],
+      );
+    } else {
+      media = SizedBox(
+        height: 240,
+        child: Container(
+          color: const Color(0xFFFBF8F4),
+          alignment: Alignment.center,
+          child: CircularProgressIndicator(color: widget.accent),
+        ),
+      );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: const Color(0xFFE8DFD5)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          media,
+          const Divider(height: 1, thickness: 1, color: Color(0xFFF0E8E0)),
+          Padding(
+            padding: EdgeInsets.fromLTRB(18, 14, 18, widget.footer == null ? 16 : 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (!widget.playAtCorner) ...[
+                  Padding(
+                    padding: const EdgeInsets.only(top: 1),
+                    child: Icon(
+                      Icons.play_arrow_outlined,
+                      size: 18,
+                      color: widget.accent,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: Text(
+                    widget.caption ?? 'Video · ${widget.title}',
+                    style: const TextStyle(
+                      fontSize: 14,
+                      height: 19 / 14,
+                      fontWeight: FontWeight.w600,
+                      color: ContigoColors.inkMuted,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (widget.footer != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 16),
+              child: widget.footer,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Botón circular grande de reproducir/pausar con aro blanco.
+class _PlayButton extends StatelessWidget {
+  const _PlayButton({
+    required this.color,
+    required this.playing,
+    required this.onPressed,
+  });
+
+  final Color color;
+  final bool playing;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: playing ? 'Pausar video' : 'Reproducir video',
+      excludeSemantics: true,
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          width: 76,
+          height: 76,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 5),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.3),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Icon(
+            playing ? Icons.pause : Icons.play_arrow,
+            size: 34,
+            color: Colors.white,
+          ),
+        ),
+      ),
     );
   }
 }

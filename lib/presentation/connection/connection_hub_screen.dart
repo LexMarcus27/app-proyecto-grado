@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../app/navigation.dart';
 import '../../app/router.dart';
+import '../../app/theme.dart';
 import '../../domain/connection/connection.dart';
 import '../../domain/journey/journey.dart';
 import '../../domain/metrics/metrics.dart';
@@ -106,7 +107,7 @@ class _ConnectionHubScreenState extends ConsumerState<ConnectionHubScreen> {
           ? setState(() => _peopleView = false)
           : context.goBack(AppRoute.pcsHome),
       moduleLabel: 'Tejiendo vínculos',
-      moduleIcon: Icons.link,
+      moduleIcon: Icons.all_inclusive,
       child: journeyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('No se pudo cargar: $e')),
@@ -132,20 +133,10 @@ class _ConnectionHubScreenState extends ConsumerState<ConnectionHubScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
             children: [
-              const CompanionNote(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Tejer vínculos se hace paso a paso y de muchas formas.',
-                      style: PcsText.body,
-                    ),
-                    SizedBox(height: 8),
-                    Text('¿Qué paso quieres dar hoy?', style: PcsText.cloud),
-                  ],
-                ),
-              ),
+              const _HubHero(),
+              const SizedBox(height: 16),
               _FeaturedStep(
+                step: _step,
                 content: featured,
                 icon: connectionStepIcons[_step]!,
                 onPrimary: () => _openStep(_step),
@@ -167,15 +158,78 @@ class _ConnectionHubScreenState extends ConsumerState<ConnectionHubScreen> {
   }
 }
 
-/// Paso destacado «Un paso para hoy» (`.pcs-featured-step`).
+/// Tarjeta de bienvenida del hub (propuesta M21): frase, pregunta serif y
+/// avatar del acompañante.
+class _HubHero extends StatelessWidget {
+  const _HubHero();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(22, 22, 12, 0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: 22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tejer vínculos se hace paso a paso y de muchas formas.',
+                    style: PcsText.body,
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    '¿Qué paso quieres dar hoy?',
+                    style: TextStyle(
+                      fontFamily: ContigoTheme.displayFontFamily,
+                      fontFamilyFallback: ContigoTheme.displayFontFallback,
+                      fontSize: 30,
+                      height: 34 / 30,
+                      fontWeight: FontWeight.w700,
+                      color: PcsColors.ink,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          CompanionAvatar(scale: 1.75, background: Colors.white),
+        ],
+      ),
+    );
+  }
+}
+
+/// Ícono del botón principal del paso destacado.
+const Map<ConnectionStep, IconData> _featuredButtonIcons = {
+  ConnectionStep.message: Icons.edit_outlined,
+  ConnectionStep.received: Icons.favorite_border,
+  ConnectionStep.contact: Icons.phone_outlined,
+  ConnectionStep.meeting: Icons.calendar_today_outlined,
+  ConnectionStep.skills: Icons.menu_book_outlined,
+};
+
+/// Paso destacado «Un paso para hoy» (propuesta M21): tarjeta melocotón con
+/// dos personas unidas por un hilo, ícono, título serif, botón principal y
+/// «Otro paso».
 class _FeaturedStep extends StatelessWidget {
   const _FeaturedStep({
+    required this.step,
     required this.content,
     required this.icon,
     required this.onPrimary,
     required this.onOther,
   });
 
+  final ConnectionStep step;
   final ConnectionStepContent content;
   final IconData icon;
   final VoidCallback onPrimary;
@@ -184,29 +238,52 @@ class _FeaturedStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(top: 16),
-      padding: const EdgeInsets.fromLTRB(14, 17, 14, 17),
+      padding: const EdgeInsets.fromLTRB(22, 22, 22, 10),
       decoration: BoxDecoration(
         color: PcsColors.peach,
-        borderRadius: BorderRadius.circular(26),
+        borderRadius: BorderRadius.circular(28),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Un paso para hoy'.toUpperCase(), style: PcsText.eyebrow),
-          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Un paso para hoy'.toUpperCase(),
+                  style: PcsText.eyebrow,
+                ),
+              ),
+              const _PairAvatars(),
+            ],
+          ),
+          const SizedBox(height: 16),
           Semantics(
             liveRegion: true,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                PcsActionIcon(icon: icon),
-                const SizedBox(width: 10),
+                Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Icon(icon, size: 26, color: PcsColors.terracotta),
+                ),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(content.title, style: PcsText.featured),
+                      Text(
+                        content.title,
+                        style: PcsText.featured.copyWith(
+                          fontSize: 27,
+                          height: 32 / 27,
+                        ),
+                      ),
                       const SizedBox(height: 6),
                       Text(content.description, style: PcsText.body),
                     ],
@@ -215,29 +292,91 @@ class _FeaturedStep extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 17),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 14,
-                child: PcsPillButton(label: content.button, onPressed: onPrimary),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                flex: 10,
-                child: PcsPillButton(
-                  label: 'Otro paso',
-                  secondary: true,
-                  onPressed: onOther,
+          const SizedBox(height: 18),
+          ResourcePillButton(
+            label: content.button,
+            leadingIcon: _featuredButtonIcons[step],
+            color: PcsColors.terracotta,
+            onPressed: onPrimary,
+          ),
+          const SizedBox(height: 4),
+          Center(
+            child: TextButton(
+              style: TextButton.styleFrom(
+                foregroundColor: PcsColors.accentDark,
+                textStyle: const TextStyle(
+                  fontFamily: ContigoTheme.bodyFontFamily,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-            ],
+              onPressed: onOther,
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Otro paso'),
+                  SizedBox(width: 4),
+                  Icon(Icons.chevron_right, size: 20),
+                ],
+              ),
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+/// Dos personas unidas por un hilo punteado (decorativo).
+class _PairAvatars extends StatelessWidget {
+  const _PairAvatars();
+
+  @override
+  Widget build(BuildContext context) {
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: 120,
+        height: 36,
+        child: Stack(
+          children: [
+            Positioned.fill(child: CustomPaint(painter: _PairThreadPainter())),
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: HomeAvatar(index: 1, size: 36),
+            ),
+            const Align(
+              alignment: Alignment.centerRight,
+              child: HomeAvatar(index: 0, size: 36),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PairThreadPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final y = size.height / 2;
+    final path = Path()
+      ..moveTo(40, y)
+      ..quadraticBezierTo(size.width * 0.38, y + 8, size.width / 2, y)
+      ..quadraticBezierTo(size.width * 0.62, y - 8, size.width - 40, y);
+    final paint = Paint()
+      ..color = const Color(0xFFD9B5A0)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    for (final metric in path.computeMetrics()) {
+      for (var d = 0.0; d < metric.length; d += 6) {
+        canvas.drawPath(metric.extractPath(d, d + 0.1), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PairThreadPainter old) => false;
 }
 
 /// Rejilla «Otros pasos» (`.pcs-step-grid`): dos columnas y el último paso a
