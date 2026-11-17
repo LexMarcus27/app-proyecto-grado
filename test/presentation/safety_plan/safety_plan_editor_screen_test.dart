@@ -5,7 +5,6 @@
 import 'package:contigo/app/router.dart';
 import 'package:contigo/app/theme.dart';
 import 'package:contigo/presentation/safety_plan/safety_plan_editor_screen.dart';
-import 'package:contigo/presentation/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -50,12 +49,51 @@ void main() {
 
       expect(find.text('Mi plan de seguridad'), findsOneWidget);
       expect(find.text('Personas a quienes puedo pedir ayuda'), findsOneWidget);
-      // El indicador de simulación persistente de la importación de contactos.
-      expect(find.byType(SimulationIndicator), findsWidgets);
+      // Aviso de simulación de la importación de contactos (bajo el botón,
+      // propuesta M5).
       expect(
         find.textContaining('Importación de contactos simulada'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('los cuatro pasos se editan con la misma hoja', (tester) async {
+      tester.view.physicalSize = const Size(600, 1600);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(_host());
+      await tester.pumpAndSettle();
+      expect(find.text('Falta por diligenciar'), findsNWidgets(4));
+
+      for (var i = 0; i < 4; i++) {
+        await tester.tap(find.byTooltip(RegExp('^Editar: ')).at(i));
+        await tester.pumpAndSettle();
+        expect(find.text('PASO ${i + 1} DE 4'), findsOneWidget);
+        expect(
+          find.descendant(
+            of: find.byType(BottomSheet),
+            matching: find.text('Cancelar'),
+          ),
+          findsOneWidget,
+        );
+        await tester.enterText(
+          find.descendant(
+            of: find.byType(BottomSheet),
+            matching: find.byType(TextField),
+          ),
+          'Texto ficticio del paso ${i + 1}',
+        );
+        await tester.tap(find.descendant(
+          of: find.byType(BottomSheet),
+          matching: find.text('Guardar'),
+        ));
+        await tester.pumpAndSettle();
+        expect(find.text('Texto ficticio del paso ${i + 1}'), findsOneWidget);
+      }
+      expect(find.text('Completo'), findsNWidgets(4));
+      expect(find.text('Falta por diligenciar'), findsNothing);
     });
 
     testWidgets('importar desde contactos agrega el contacto ficticio',

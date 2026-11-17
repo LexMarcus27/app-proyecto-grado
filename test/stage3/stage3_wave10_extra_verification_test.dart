@@ -258,17 +258,19 @@ void main() {
       await tester.tap(target);
       await tester.pumpAndSettle();
     }
+    // Propuesta M5: cada paso y cada actividad se escriben en la misma hoja
+    // inferior («PASO n DE 4»), con «Guardar» y «Cancelar».
     Future<void> saveDialog(String text) async {
       await tester.enterText(find.descendant(
-        of: find.byType(AlertDialog), matching: find.byType(TextField),
+        of: find.byType(BottomSheet), matching: find.byType(TextField),
       ), text);
       await tester.tap(find.descendant(
-        of: find.byType(AlertDialog), matching: find.text('Guardar'),
+        of: find.byType(BottomSheet), matching: find.text('Guardar'),
       ));
       await tester.pumpAndSettle();
     }
     await tapVisible('Señales y situaciones que reconozco');
-    await tapVisible('Editar');
+    expect(find.text('PASO 1 DE 4'), findsOneWidget);
     await saveDialog('Ejemplo ficticio de prueba');
     expect(find.text('Ejemplo ficticio de prueba'), findsOneWidget);
     expect(find.text('Completo'), findsOneWidget);
