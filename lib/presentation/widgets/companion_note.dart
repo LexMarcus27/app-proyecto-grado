@@ -92,6 +92,39 @@ class CompanionNote extends StatelessWidget {
   }
 }
 
+/// Avatar del acompañante suelto (sin nube), escalado por [scale] y fundido
+/// sobre [background] (p. ej. blanco dentro de una tarjeta).
+class CompanionAvatar extends StatelessWidget {
+  const CompanionAvatar({
+    super.key,
+    this.expression = CompanionExpression.welcome,
+    this.scale = 1,
+    this.background,
+  });
+
+  final CompanionExpression expression;
+  final double scale;
+  final Color? background;
+
+  @override
+  Widget build(BuildContext context) {
+    final pose = switch (expression) {
+      CompanionExpression.welcome => _SpritePose.welcome,
+      CompanionExpression.thoughtful => _SpritePose.thoughtful,
+      CompanionExpression.affection => _SpritePose.affection,
+    };
+    return ExcludeSemantics(
+      child: SizedBox(
+        width: pose.windowWidth * scale,
+        height: pose.windowHeight * scale,
+        child: FittedBox(
+          child: _CompanionAvatar(expression: expression, background: background),
+        ),
+      ),
+    );
+  }
+}
+
 /// Pose del avatar recortada de la lámina de sprites.
 ///
 /// El avatar (`assets/media/caring-messages/avatar.png`) es una **lámina de
@@ -187,9 +220,12 @@ class _SpritePose {
 /// sin distorsión (la relación de aspecto de cada sprite se respeta porque el
 /// recorte deriva de las mismas fórmulas del CSS).
 class _CompanionAvatar extends StatefulWidget {
-  const _CompanionAvatar({required this.expression});
+  const _CompanionAvatar({required this.expression, this.background});
 
   final CompanionExpression expression;
+
+  /// Fondo sobre el que se dibuja (por defecto, el del Scaffold).
+  final Color? background;
 
   @override
   State<_CompanionAvatar> createState() => _CompanionAvatarState();
@@ -274,10 +310,10 @@ class _CompanionAvatarState extends State<_CompanionAvatar> {
     // Fondo del entorno del componente: CompanionNote se dibuja sobre el lienzo
     // del Scaffold. Se resuelve del tema para que la mezcla multiply no
     // dependa de las capas que haya debajo durante el scroll (ver [_SpritePainter]).
-    final background =
-        Theme.of(context).scaffoldBackgroundColor == Colors.transparent
-        ? ContigoColors.canvas
-        : Theme.of(context).scaffoldBackgroundColor;
+    final background = widget.background ??
+        (Theme.of(context).scaffoldBackgroundColor == Colors.transparent
+            ? ContigoColors.canvas
+            : Theme.of(context).scaffoldBackgroundColor);
 
     return SizedBox.fromSize(
       size: pose.window,

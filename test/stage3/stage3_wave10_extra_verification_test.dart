@@ -15,7 +15,7 @@ import 'package:contigo/domain/journey/demo_scenario.dart';
 import 'package:contigo/domain/notifications/notifications.dart';
 import 'package:contigo/presentation/safety_plan/safety_plan_controller.dart';
 import 'package:contigo/presentation/safety_plan/widgets/story_video.dart';
-import 'package:contigo/presentation/widgets/contigo_button.dart';
+import 'package:contigo/presentation/widgets/resource_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -144,7 +144,8 @@ void main() {
     expect(tester.widget<TextField>(find.byType(TextField)).controller!.text, 'C1D2E3');
     await tester.tap(find.text('Continuar'));
     await tester.pump();
-    final button = tester.widget<ContigoButton>(find.byType(ContigoButton));
+    // Botón en pastilla de la propuesta M1.
+    final button = tester.widget<ResourcePillButton>(find.byType(ResourcePillButton));
     expect(button.label, 'Verificando...');
     expect(button.onPressed, isNull);
     await tester.pump(const Duration(milliseconds: 899));

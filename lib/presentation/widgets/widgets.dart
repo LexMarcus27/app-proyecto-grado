@@ -23,3 +23,5 @@ export 'tile_grid.dart';
 export 'pcs_internal.dart';
 export 'dashed_border.dart';
 export 'demo_tools_panel.dart';
+export 'resource_kit.dart';
+export 'contigo_logo.dart';
