@@ -756,7 +756,7 @@ class _PersonDetailSheet extends ConsumerWidget {
     final isCurrentReference = savedReference?.personId == person.id &&
         isEmaReferenceActive(journey, savedReference);
 
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         20,
         0,
@@ -914,7 +914,8 @@ class _InvitationsSheet extends ConsumerWidget {
     final journey = ref.watch(networkJourneyProvider).value;
     if (journey == null) return const SizedBox.shrink();
 
-    return Padding(
+    // Desplazable: con muchas personas la lista supera la altura de la hoja.
+    return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         20,
         0,
@@ -1026,7 +1027,7 @@ class _InviteConfirmSheetState extends ConsumerState<_InviteConfirmSheet> {
     }
     if (person == null) return const SizedBox.shrink();
 
-    return Padding(
+    return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         20,
         0,

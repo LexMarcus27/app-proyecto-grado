@@ -21,3 +21,5 @@ export 'role_navigation.dart';
 export 'support_button.dart';
 export 'tile_grid.dart';
 export 'pcs_internal.dart';
+export 'dashed_border.dart';
+export 'demo_tools_panel.dart';

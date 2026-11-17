@@ -45,26 +45,37 @@ class CaregiverHomeScreen extends ConsumerWidget {
               const StatusBar(),
               const SizedBox(height: 12),
               SizedBox(
-                height: 130,
+                height: 150,
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
                     const Positioned(
                       right: -5,
-                      top: -5,
-                      child: CaregiverPlant(width: 98, height: 106),
+                      top: 6,
+                      child: CaregiverPlant(width: 112, height: 118),
                     ),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Text(
+                          caregiverDateLabel(DateTime.now()),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            height: 18 / 13,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.6,
+                            color: ContigoColors.sage,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
                         const Text(
                           'Inicio',
                           key: Key('caregiver-home-title'),
                           style: caregiverHeroTitleStyle,
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 6),
                         ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 200),
+                          constraints: const BoxConstraints(maxWidth: 230),
                           child: Text(
                             '¡Hola, ${DemoCaregiver.name}! Qué bueno verte.',
                             style: const TextStyle(
@@ -130,7 +141,7 @@ class CaregiverHomeScreen extends ConsumerWidget {
                         ? '¿Cómo está el tejido con $pcsName ahora?'
                         : '¿Cómo está el tejido ahora?',
                     subtitle: 'Registra cómo está la relación',
-                    icon: Icons.show_chart,
+                    icon: Icons.trending_up,
                     enabled: linked,
                     onTap: () => context.pushNamed(AppRoute.caregiverLinkCheckIn),
                   ),
@@ -146,9 +157,22 @@ class CaregiverHomeScreen extends ConsumerWidget {
   }
 }
 
-/// Tarjeta del vínculo del cuidador con el PCS (`.caregiver-link-card`).
-/// Con vínculo activo abre el registro de la relación (M12); sin vínculo queda
-/// deshabilitada.
+//// Fecha del encabezado del inicio del cuidador («LUNES 16 DE NOVIEMBRE»).
+String caregiverDateLabel(DateTime date) {
+  const days = [
+    'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado', 'domingo',
+  ];
+  const months = [
+    'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+    'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre',
+  ];
+  return '${days[date.weekday - 1]} ${date.day} de ${months[date.month - 1]}'
+      .toUpperCase();
+}
+
+/// Tarjeta del vínculo del cuidador con el PCS (propuesta A): avatar, «MI
+/// VÍNCULO CON», nombre serif y estado del vínculo. Con vínculo activo abre el
+/// registro de la relación (M12); sin vínculo queda deshabilitada.
 class _LinkCard extends StatelessWidget {
   const _LinkCard({
     required this.linked,
@@ -170,64 +194,63 @@ class _LinkCard extends StatelessWidget {
       label: pcsName != null
           ? 'Mi vínculo con $pcsName. Registrar cómo está la relación'
           : 'Todavía no tienes un vínculo activo',
+      excludeSemantics: true,
       child: Material(
         color: ContigoColors.surface,
-        borderRadius: BorderRadius.circular(19),
+        borderRadius: BorderRadius.circular(26),
         child: InkWell(
           onTap: linked ? onTap : null,
-          borderRadius: BorderRadius.circular(19),
+          borderRadius: BorderRadius.circular(26),
           child: Container(
-            padding: const EdgeInsets.all(15),
+            padding: const EdgeInsets.fromLTRB(22, 20, 18, 20),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(19),
-              border: Border.all(color: caregiverBorder),
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(color: const Color(0xFFE6DDD3)),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0x0D3A3238),
+                  blurRadius: 16,
+                  offset: Offset(0, 4),
+                ),
+              ],
             ),
             child: Row(
               children: [
-                Container(
-                  width: 46,
-                  height: 46,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFF2E3E0),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.person_outline,
-                    color: Color(0xFFA85550),
-                  ),
-                ),
-                const SizedBox(width: 12),
+                const HomeAvatar(index: 0, size: 64),
+                const SizedBox(width: 18),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ExcludeSemantics(
-                        child: Text(
-                          caption.toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            height: 18 / 12,
-                            fontWeight: FontWeight.w700,
-                            color: ContigoColors.sage,
-                          ),
+                      Text(
+                        caption.toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          height: 18 / 13,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.4,
+                          color: ContigoColors.sage,
                         ),
                       ),
+                      const SizedBox(height: 2),
                       Text(
                         name,
                         style: const TextStyle(
                           fontFamily: ContigoTheme.displayFontFamily,
                           fontFamilyFallback: ContigoTheme.displayFontFallback,
-                          fontSize: 22,
-                          height: 27 / 22,
+                          fontSize: 26,
+                          height: 32 / 26,
                           fontWeight: FontWeight.w700,
                           color: ContigoColors.ink,
                         ),
                       ),
+                      const SizedBox(height: 6),
+                      _LinkStatusChip(active: linked),
                     ],
                   ),
                 ),
                 if (linked)
-                  const Icon(Icons.chevron_right, color: ContigoColors.ink),
+                  const Icon(Icons.chevron_right, size: 26, color: ContigoColors.ink),
               ],
             ),
           ),
@@ -237,9 +260,48 @@ class _LinkCard extends StatelessWidget {
   }
 }
 
-/// Tile de un recorrido del cuidador (`.caregiver-tile`). Cuando [enabled] es
-/// `false`, se muestra con fondo neutro, no es pulsable y anuncia que se
-/// necesita un vínculo activo.
+/// Estado del vínculo: «● Vínculo activo» o «Sin vínculo activo».
+class _LinkStatusChip extends StatelessWidget {
+  const _LinkStatusChip({required this.active});
+
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = active ? ContigoColors.sage : ContigoColors.inkMuted;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: active ? const Color(0xFFE3ECDF) : const Color(0xFFEFEAE3),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            active ? 'Vínculo activo' : 'Sin vínculo activo',
+            style: TextStyle(
+              fontSize: 13,
+              height: 18 / 13,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tile de un recorrido del cuidador (`.caregiver-tile`), con chevrón. Cuando
+/// [enabled] es `false`, se muestra con fondo neutro, no es pulsable y anuncia
+/// que se necesita un vínculo activo.
 class _CaregiverTile extends StatelessWidget {
   const _CaregiverTile({
     required this.title,
@@ -266,57 +328,62 @@ class _CaregiverTile extends StatelessWidget {
         ? const Color(0xFFEFEAE3)
         : help
             ? const Color(0xFFF6E3E2)
-            : const Color(0xFFE5EDE2);
+            : const Color(0xFFE3ECE0);
+    final accent = help ? const Color(0xFFA3474A) : ContigoColors.sage;
     return Semantics(
       button: true,
       enabled: enabled,
       label: semanticLabel,
       child: Material(
         color: background,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(26),
         child: InkWell(
           onTap: enabled ? onTap : null,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(26),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 210),
+            constraints: const BoxConstraints(minHeight: 214),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 16, 12, 16),
+              padding: const EdgeInsets.fromLTRB(18, 18, 14, 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: help
-                          ? const Color(0xFFEED0CD)
-                          : const Color(0xFFD5E1D0),
-                    ),
-                    child: Icon(
-                      icon,
-                      size: 20,
-                      color: help ? const Color(0xFFA3474A) : ContigoColors.sage,
-                    ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: help
+                              ? const Color(0xFFEED0CD)
+                              : const Color(0xFFD3E0CE),
+                        ),
+                        child: Icon(icon, size: 24, color: accent),
+                      ),
+                      const Spacer(),
+                      if (enabled)
+                        Icon(Icons.chevron_right, size: 22, color: accent),
+                    ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 18),
                   Text(
                     title,
                     style: TextStyle(
                       fontFamily: ContigoTheme.displayFontFamily,
                       fontFamilyFallback: ContigoTheme.displayFontFallback,
-                      fontSize: 18,
-                      height: 22 / 18,
+                      fontSize: 20,
+                      height: 25 / 20,
                       fontWeight: FontWeight.w700,
-                      color: help ? ContigoColors.clay : ContigoColors.ink,
+                      color: help ? const Color(0xFF9A3F3C) : ContigoColors.ink,
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      fontSize: 13,
-                      height: 18 / 13,
+                      fontSize: 14,
+                      height: 20 / 14,
                       color: ContigoColors.inkMuted,
                     ),
                   ),
@@ -352,74 +419,54 @@ class CaregiverDemoPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     final controller = ref.read(caregiverDemoControllerProvider);
-    return Material(
-      color: ContigoColors.surface,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: const BorderSide(color: ContigoColors.sageSoft),
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          tilePadding: const EdgeInsets.symmetric(horizontal: 14),
-          childrenPadding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-          expandedCrossAxisAlignment: CrossAxisAlignment.stretch,
-          title: Text(
-            'Herramientas de demostración del cuidador',
-            style: (textTheme.labelLarge ?? const TextStyle())
-                .copyWith(fontSize: 13),
-          ),
-          children: [
-            Text(
-              'Datos ficticios. Las simulaciones usan el vínculo de Marta con '
-              'Sofía; no representan aceptación, acceso o desvinculación reales.',
-              style: (textTheme.bodySmall ?? const TextStyle())
-                  .copyWith(color: ContigoColors.inkMuted),
-            ),
-            const SizedBox(height: 12),
-            _ProfileSelector(),
-            const SizedBox(height: 12),
-            ContigoButton(
-              label: 'Cargar vínculo de demostración',
-              small: true,
-              fullWidth: true,
-              onPressed: () => controller.simulate(CaregiverDemoMode.active),
-            ),
-            const SizedBox(height: 8),
-            ContigoButton(
-              label: 'Simular aceptación sin asociación',
-              variant: ContigoButtonVariant.secondary,
-              small: true,
-              fullWidth: true,
-              onPressed: () =>
-                  controller.simulate(CaregiverDemoMode.acceptedOnly),
-            ),
-            const SizedBox(height: 8),
-            ContigoButton(
-              label: 'Simular revocación del vínculo',
-              variant: ContigoButtonVariant.secondary,
-              small: true,
-              fullWidth: true,
-              onPressed: () => controller.simulate(CaregiverDemoMode.revoked),
-            ),
-            const SizedBox(height: 4),
-            // Acceso a los controles de demostración (incluye el conmutador de
-            // rol PCS/Cuidador).
-            Center(
-              child: TextButton(
-                onPressed: () => context.pushNamed(AppRoute.demoControls),
-                child: const Text('Controles de demostración'),
-              ),
-            ),
-          ],
+    return DemoToolsPanel(
+      children: [
+        Text(
+          'Datos ficticios. Las simulaciones usan el vínculo de Marta con '
+          'Sofía; no representan aceptación, acceso o desvinculación reales.',
+          style: (textTheme.bodySmall ?? const TextStyle())
+              .copyWith(color: ContigoColors.inkMuted),
         ),
-      ),
+        const SizedBox(height: 12),
+        _ProfileSelector(),
+        const SizedBox(height: 12),
+        ContigoButton(
+          label: 'Cargar vínculo de demostración',
+          small: true,
+          fullWidth: true,
+          onPressed: () => controller.simulate(CaregiverDemoMode.active),
+        ),
+        const SizedBox(height: 8),
+        ContigoButton(
+          label: 'Simular aceptación sin asociación',
+          variant: ContigoButtonVariant.secondary,
+          small: true,
+          fullWidth: true,
+          onPressed: () => controller.simulate(CaregiverDemoMode.acceptedOnly),
+        ),
+        const SizedBox(height: 8),
+        ContigoButton(
+          label: 'Simular revocación del vínculo',
+          variant: ContigoButtonVariant.secondary,
+          small: true,
+          fullWidth: true,
+          onPressed: () => controller.simulate(CaregiverDemoMode.revoked),
+        ),
+        const SizedBox(height: 4),
+        // Acceso a los controles de demostración (incluye el conmutador de
+        // rol PCS/Cuidador).
+        Center(
+          child: TextButton(
+            onPressed: () => context.pushNamed(AppRoute.demoControls),
+            child: const Text('Controles de demostración'),
+          ),
+        ),
+      ],
     );
   }
 }
 
-/// Selector de perfil ficticio del cuidador (demo).
+// Selector de perfil ficticio del cuidador (demo).
 class _ProfileSelector extends StatefulWidget {
   @override
   State<_ProfileSelector> createState() => _ProfileSelectorState();

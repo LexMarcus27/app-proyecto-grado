@@ -73,7 +73,7 @@ void main() {
     expect((await c.read(caringMessageRepositoryProvider).loadMessages()).single.text, sample);
     await _tapLabel(tester, 'Salir del recurso');
     await _tapLabel(tester, 'Perfil');
-    await _tapLabel(tester, 'Herramientas de demostración del cuidador');
+    await _tapLabel(tester, 'Herramientas de demostración');
     await _tapLabel(tester, 'Controles de demostración');
     await _tapLabel(tester, 'Entrar como PCS');
     if (tester.any(find.text('Cambiar de rol (demo)'))) {

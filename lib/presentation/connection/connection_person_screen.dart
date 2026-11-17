@@ -16,8 +16,11 @@ import 'connection_selection.dart';
 
 
 // Tokens del prototipo (`C` de `ui.tsx`).
-const Color _brand = Color(0xFFA85550);
-const Color _brandSoft = Color(0xFFF2E3E0);
+// Propuesta A: acento terracota (`.pcs-primary`) y fondos melocotón.
+const Color _brand = ContigoColors.terracotta;
+const Color _brandSoft = Color(0xFFF9E4D7);
+const Color _chipBorder = Color(0xFFDDB9A3);
+const Color _cardBorder = Color(0xFFECE3DA);
 const Color _border = Color(0xFFDFD4C9);
 const Color _soft = Color(0xFFF1E9DF);
 const Color _warmSoft = Color(0xFFF8ECD4);
@@ -25,7 +28,6 @@ const Color _warmText = Color(0xFF805C1D);
 const Color _ochre = Color(0xFFD3A24C);
 const Color _success = Color(0xFF536B50);
 const Color _successSoft = Color(0xFFE5EDE2);
-const Color _critical = Color(0xFFA3474A);
 
 /// Tiempo del borrador simulado (el prototipo usa un temporizador local de
 /// 1,8 s; no hay modelo de IA real, A12).
@@ -248,6 +250,10 @@ class _ConnectionViewState extends State<_ConnectionView> {
   String? _selectedMeeting;
   bool _meetingPrepared = false;
 
+  /// Texto de la invitación. Vive en el estado de la pantalla (y no en la
+  /// hoja) para que no se libere mientras la hoja aún se anima al cerrarse.
+  final _inviteMessage = TextEditingController();
+
   String get _recipient => widget.recipient;
   String get _draftText =>
       'Hola $_recipient, pensé en ti hoy y quería escribirte. No tienes que '
@@ -285,6 +291,7 @@ class _ConnectionViewState extends State<_ConnectionView> {
     _timer?.cancel();
     _composed.dispose();
     _newActivity.dispose();
+    _inviteMessage.dispose();
     super.dispose();
   }
 
@@ -498,11 +505,10 @@ class _ConnectionViewState extends State<_ConnectionView> {
     final activity = _selectedMeeting;
     if (activity == null) return;
     setState(() => _meetingPrepared = false);
-    final message = TextEditingController(
-      text: 'Hola $_recipient, me gustaría que programáramos un espacio para '
+    final message = _inviteMessage
+      ..text = 'Hola $_recipient, me gustaría que programáramos un espacio para '
           '${activity.toLowerCase()}. ¿Te gustaría? Podemos acordar el momento '
-          'que nos funcione. Si ahora no puedes, está bien.',
-    );
+          'que nos funcione. Si ahora no puedes, está bien.';
     final prepared = await showModalBottomSheet<bool>(
       context: context,
       isScrollControlled: true,
@@ -579,7 +585,6 @@ class _ConnectionViewState extends State<_ConnectionView> {
         ),
       ),
     );
-    message.dispose();
     if (prepared == true && mounted) setState(() => _meetingPrepared = true);
   }
 
@@ -639,306 +644,715 @@ class _ConnectionViewState extends State<_ConnectionView> {
       _selectedMeeting = null;
     }
     return Scaffold(
-      backgroundColor: ContigoColors.canvas,
+      backgroundColor: ContigoColors.canvasLight,
       floatingActionButton: SupportButton.pcs(context),
       body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const StatusBar(),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 20, 12),
-              child: Align(
-                alignment: Alignment.centerLeft,
-                child: IconButton(
-                  tooltip: 'Volver a Tejiendo vínculos',
-                  icon: const Icon(Icons.arrow_back, color: _brand),
-                  onPressed: () => context.goBack(AppRoute.connectionHub),
-                ),
-              ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, supportContentPadding + 20),
-                child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, supportContentPadding + 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const StatusBar(),
+              const SizedBox(height: 4),
+              // Volver y módulo de origen (propuesta A).
+              Row(
                 children: [
-                  Text(
-                    'Conexión con $_recipient',
-                    style: const TextStyle(
-                      fontSize: 26,
-                      height: 32 / 26,
-                      fontWeight: FontWeight.w700,
-                      color: ContigoColors.ink,
+                  _CircleBackButton(
+                    tooltip: 'Volver a Tejiendo vínculos',
+                    onPressed: () => context.goBack(AppRoute.connectionHub),
+                  ),
+                  const SizedBox(width: 12),
+                  const _ModuleChip(label: 'Tejiendo vínculos'),
+                ],
+              ),
+              const SizedBox(height: 22),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const HomeAvatar(index: 0, size: 62),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Conexión con $_recipient',
+                          style: const TextStyle(
+                            fontFamily: ContigoTheme.displayFontFamily,
+                            fontFamilyFallback: ContigoTheme.displayFontFallback,
+                            fontSize: 30,
+                            height: 36 / 30,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: -0.5,
+                            color: ContigoColors.ink,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Puedes elegir una forma pequeña de acercarte. '
+                          'También puedes hacerlo después.',
+                          style: TextStyle(
+                            fontSize: 15,
+                            height: 22 / 15,
+                            color: ContigoColors.inkMuted,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Puedes elegir una forma pequeña de acercarte. También '
-                    'puedes hacerlo después.',
-                    style: TextStyle(
-                      fontSize: 15,
-                      height: 22 / 15,
-                      color: ContigoColors.inkMuted,
-                    ),
+                ],
+              ),
+              const SizedBox(height: 22),
+              _ActionGroup(
+                rows: [
+                  _GroupRow(
+                    semanticLabel: 'Llamar o enviar audio a $_recipient',
+                    icon: Icons.phone_outlined,
+                    title: 'Llamar o enviar audio',
+                    onTap: _openContactOptions,
                   ),
-                  const SizedBox(height: 28),
-                  _RowCard(
+                  _GroupRow(
+                    semanticLabel: 'Preguntas para conectar con $_recipient',
+                    icon: Icons.chat_bubble_outline,
+                    title: 'Preguntas para conectar',
+                    subtitle: 'Un espacio de preguntas para conversar con '
+                        '$_recipient y conocerse mejor',
+                    onTap: () => context.pushNamed(AppRoute.pcsConnectionQuestions),
+                  ),
+                  _GroupRow(
                     semanticLabel: 'Ver mensajes de cuidado recibidos',
                     icon: Icons.favorite_border,
                     title: 'Ver mensajes de cuidado',
                     subtitle: 'Vuelve a los mensajes que has recibido',
                     onTap: () => context.pushNamed(AppRoute.caringInbox),
                   ),
-                  _RowCard(
-                    semanticLabel: 'Llamar o enviar audio a $_recipient',
-                    icon: Icons.phone_outlined,
-                    title: 'Llamar o enviar audio',
-                    onTap: _openContactOptions,
-                  ),
-                  _RowCard(
-                    semanticLabel: 'Preguntas para conectar con $_recipient',
-                    icon: Icons.chat_bubble_outline,
-                    boxedIcon: true,
-                    title: 'Preguntas para conectar',
-                    subtitle: 'Un espacio de preguntas para conversar con '
-                        '$_recipient y conocerse mejor',
-                    onTap: () => context.pushNamed(AppRoute.pcsConnectionQuestions),
-                  ),
-                  _AssistantCard(
-                    recipient: _recipient,
-                    prepared: _messagePrepared,
-                    onHelp: _openComposer,
-                  ),
-                  const SizedBox(height: 8),
-                  const Text(
-                    'Ideas para un encuentro personal',
-                    style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Actividades que podrías proponer.',
-                    style: TextStyle(fontSize: 13, color: ContigoColors.inkMuted),
-                  ),
-                  const SizedBox(height: 16),
-                  const _Overline('Sugeridas por el equipo'),
-                  for (final activity in _suggested)
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: _soft,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(activity, style: const TextStyle(fontSize: 14)),
-                          ),
-                          const Text(
-                            'Contenido por validar',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontStyle: FontStyle.italic,
-                              color: ContigoColors.inkMuted,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  const SizedBox(height: 12),
-                  const _Overline('Mis actividades'),
-                  for (final activity in List.of(_myActivities))
-                    Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.only(left: 14, right: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _border),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: Text(activity, style: const TextStyle(fontSize: 14)),
-                          ),
-                          IconButton(
-                            tooltip: 'Eliminar actividad $activity',
-                            icon: const Icon(Icons.close, color: _critical, size: 20),
-                            onPressed: () => setState(() {
-                              _myActivities.remove(activity);
-                              if (_selectedMeeting == activity) {
-                                _selectedMeeting = null;
-                              }
-                            }),
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (_addingActivity)
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: _brand),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          TextField(
-                            controller: _newActivity,
-                            autofocus: true,
-                            decoration: const InputDecoration(
-                              hintText: 'Ej: Ver una película en casa',
-                              border: InputBorder.none,
-                              isDense: true,
-                            ),
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          const SizedBox(height: 10),
-                          Row(
-                            children: [
-                              ContigoButton(
-                                label: 'Guardar',
-                                small: true,
-                                onPressed: () {
-                                  final text = _newActivity.text.trim();
-                                  if (text.isEmpty) return;
-                                  setState(() {
-                                    _myActivities.add(text);
-                                    _newActivity.clear();
-                                    _addingActivity = false;
-                                  });
-                                },
-                              ),
-                              const SizedBox(width: 8),
-                              ContigoButton(
-                                label: 'Cancelar',
-                                small: true,
-                                variant: ContigoButtonVariant.tertiary,
-                                onPressed: () => setState(() {
-                                  _newActivity.clear();
-                                  _addingActivity = false;
-                                }),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    )
-                  else
-                    _DashedAddButton(
-                      onPressed: () => setState(() => _addingActivity = true),
-                    ),
-                  const SizedBox(height: 20),
-                  _MeetingCard(
-                    key: _meetingKey,
-                    recipient: _recipient,
-                    options: meetingOptions,
-                    selected: _selectedMeeting,
-                    prepared: _meetingPrepared,
-                    onSelect: (value) => setState(() {
-                      _selectedMeeting = value;
-                      _meetingPrepared = false;
-                    }),
-                    onPrepare: _prepareMeeting,
-                  ),
-                  const SizedBox(height: 20),
-                  OutlinedButton.icon(
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: ContigoColors.inkMuted,
-                      side: const BorderSide(color: _border),
-                      minimumSize: const Size.fromHeight(54),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      textStyle: const TextStyle(fontFamily: ContigoTheme.bodyFontFamily, fontSize: 16),
-                    ),
-                    onPressed: () => context.goBack(AppRoute.connectionHub),
-                    icon: const Icon(Icons.close, size: 20),
-                    label: const Text('Ahora no'),
-                  ),
                 ],
+              ),
+              const SizedBox(height: 18),
+              _AssistantCard(
+                recipient: _recipient,
+                prepared: _messagePrepared,
+                onHelp: _openComposer,
+              ),
+              const SizedBox(height: 18),
+              _meetingCard(meetingOptions),
+              const SizedBox(height: 24),
+              Center(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: _brand,
+                    side: const BorderSide(color: _chipBorder, width: 1.5),
+                    minimumSize: const Size(120, 48),
+                    padding: const EdgeInsets.symmetric(horizontal: 26),
+                    shape: const StadiumBorder(),
+                    textStyle: const TextStyle(
+                      fontFamily: ContigoTheme.bodyFontFamily,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  onPressed: () => context.goBack(AppRoute.connectionHub),
+                  child: const Text('Ahora no'),
                 ),
               ),
-            ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Tarjeta «Encontrarse»: actividades sugeridas y propias como opciones
+  /// seleccionables, destinatario y preparación de la invitación.
+  Widget _meetingCard(List<String> options) {
+    final selected = _selectedMeeting;
+    void select(String activity) => setState(() {
+          _selectedMeeting = activity;
+          _meetingPrepared = false;
+        });
+    return _SectionCard(
+      key: _meetingKey,
+      overline: 'Encontrarse',
+      title: 'Programar un encuentro',
+      children: [
+        Text(
+          'Elige una actividad y prepara una invitación para $_recipient'
+          '${_recipient.endsWith('.') ? '' : '.'}',
+          style: const TextStyle(
+            fontSize: 15,
+            height: 22 / 15,
+            color: ContigoColors.inkMuted,
+          ),
+        ),
+        const SizedBox(height: 14),
+        const Text.rich(
+          TextSpan(
+            text: 'Sugeridas por el equipo',
+            style: TextStyle(fontWeight: FontWeight.w700),
+            children: [
+              TextSpan(
+                text: ' · Contenido por validar',
+                style: TextStyle(
+                  fontWeight: FontWeight.w400,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+          style: TextStyle(fontSize: 13, height: 18 / 13, color: ContigoColors.inkMuted),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final activity in _suggested)
+              _ActivityChip(
+                label: activity,
+                selected: selected == activity,
+                onTap: () => select(activity),
+              ),
           ],
+        ),
+        const SizedBox(height: 14),
+        const Text(
+          'Mis actividades',
+          style: TextStyle(
+            fontSize: 13,
+            height: 18 / 13,
+            fontWeight: FontWeight.w700,
+            color: ContigoColors.inkMuted,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final activity in List.of(_myActivities))
+              _ActivityChip(
+                label: activity,
+                selected: selected == activity,
+                onTap: () => select(activity),
+                onDelete: () => setState(() {
+                  _myActivities.remove(activity);
+                  if (_selectedMeeting == activity) _selectedMeeting = null;
+                }),
+              ),
+            if (!_addingActivity)
+              _AddActivityChip(
+                onPressed: () => setState(() => _addingActivity = true),
+              ),
+          ],
+        ),
+        if (_addingActivity) ...[
+          const SizedBox(height: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _brand),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TextField(
+                  controller: _newActivity,
+                  autofocus: true,
+                  decoration: const InputDecoration(
+                    hintText: 'Ej: Ver una película en casa',
+                    border: InputBorder.none,
+                    isDense: true,
+                  ),
+                  style: const TextStyle(fontSize: 14),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    ContigoButton(
+                      label: 'Guardar',
+                      small: true,
+                      onPressed: () {
+                        final text = _newActivity.text.trim();
+                        if (text.isEmpty) return;
+                        setState(() {
+                          _myActivities.add(text);
+                          _newActivity.clear();
+                          _addingActivity = false;
+                        });
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    ContigoButton(
+                      label: 'Cancelar',
+                      small: true,
+                      variant: ContigoButtonVariant.tertiary,
+                      onPressed: () => setState(() {
+                        _newActivity.clear();
+                        _addingActivity = false;
+                      }),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF7F2EC),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Row(
+            children: [
+              const HomeAvatar(index: 0, size: 36),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Enviar a',
+                      style: TextStyle(fontSize: 12, color: ContigoColors.inkMuted),
+                    ),
+                    Text(
+                      _recipient,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: ContigoColors.ink,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const _Chip(label: 'Contacto de confianza'),
+            ],
+          ),
+        ),
+        const SizedBox(height: 14),
+        _PillButton(
+          label: 'Preparar mensaje',
+          onPressed: selected == null ? null : _prepareMeeting,
+        ),
+        if (selected == null) ...[
+          const SizedBox(height: 8),
+          const Text(
+            'Elige una actividad para preparar la invitación.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 12, color: ContigoColors.inkMuted),
+          ),
+        ],
+        if (_meetingPrepared) ...[
+          const SizedBox(height: 12),
+          Semantics(
+            liveRegion: true,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: _successSoft,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.check_circle_outline, color: _success, size: 20),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Borrador preparado para $_recipient. El envío real está '
+                      'pendiente de integración.',
+                      style: const TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: _success,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Botón circular de volver (propuesta A).
+class _CircleBackButton extends StatelessWidget {
+  const _CircleBackButton({required this.tooltip, required this.onPressed});
+
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: tooltip,
+      child: Semantics(
+        button: true,
+        label: tooltip,
+        excludeSemantics: true,
+        child: Material(
+          color: Colors.white,
+          shape: const CircleBorder(side: BorderSide(color: _border)),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: onPressed,
+            child: const SizedBox(
+              width: 46,
+              height: 46,
+              child: Icon(Icons.arrow_back, color: ContigoColors.ink, size: 22),
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-class _RowCard extends StatelessWidget {
-  const _RowCard({
+/// Etiqueta del módulo de origen («∞ Tejiendo vínculos»).
+class _ModuleChip extends StatelessWidget {
+  const _ModuleChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: _brandSoft,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.all_inclusive, size: 18, color: _brand),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: _brand,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tarjeta blanca que agrupa los accesos rápidos con divisores.
+class _ActionGroup extends StatelessWidget {
+  const _ActionGroup({required this.rows});
+
+  final List<Widget> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: const BorderSide(color: _cardBorder),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < rows.length; i++) ...[
+            if (i > 0)
+              const Divider(height: 1, thickness: 1, color: Color(0xFFF1EAE3)),
+            rows[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _GroupRow extends StatelessWidget {
+  const _GroupRow({
     required this.semanticLabel,
     required this.icon,
     required this.title,
     required this.onTap,
     this.subtitle,
-    this.boxedIcon = false,
   });
 
   final String semanticLabel;
   final IconData icon;
   final String title;
   final String? subtitle;
-  final bool boxedIcon;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: ContigoActionCard(
-        semanticLabel: semanticLabel,
-        onPressed: onTap,
-        child: Row(
-          children: [
-            if (boxedIcon)
+    return Semantics(
+      button: true,
+      label: semanticLabel,
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(18, 16, 16, 16),
+          child: Row(
+            children: [
               Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
                   color: _brandSoft,
-                  borderRadius: BorderRadius.circular(12),
+                  shape: BoxShape.circle,
                 ),
-                child: Icon(icon, color: _brand),
-              )
-            else
-              Icon(icon, color: _brand),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-                  ),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 3),
+                child: Icon(icon, size: 20, color: _brand),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      subtitle!,
+                      title,
                       style: const TextStyle(
-                        fontSize: 13,
-                        height: 18 / 13,
-                        color: ContigoColors.inkMuted,
+                        fontSize: 16,
+                        height: 21 / 16,
+                        fontWeight: FontWeight.w700,
+                        color: ContigoColors.ink,
                       ),
                     ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        subtitle!,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          height: 18 / 13,
+                          color: ContigoColors.inkMuted,
+                        ),
+                      ),
+                    ],
                   ],
-                ],
+                ),
               ),
-            ),
-            const Icon(Icons.chevron_right, color: _brand),
-          ],
+              const Icon(Icons.chevron_right, color: _brand),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
+/// Tarjeta de sección con sobretítulo y título serif («ESCRIBIRLE»,
+/// «ENCONTRARSE»).
+class _SectionCard extends StatelessWidget {
+  const _SectionCard({
+    super.key,
+    required this.overline,
+    required this.title,
+    required this.children,
+  });
+
+  final String overline;
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 22, 20, 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: _cardBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            overline.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 13,
+              height: 18 / 13,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.6,
+              color: _brand,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontFamily: ContigoTheme.displayFontFamily,
+              fontFamilyFallback: ContigoTheme.displayFontFallback,
+              fontSize: 25,
+              height: 31 / 25,
+              fontWeight: FontWeight.w700,
+              color: ContigoColors.ink,
+            ),
+          ),
+          const SizedBox(height: 10),
+          ...children,
+        ],
+      ),
+    );
+  }
+}
+
+/// Botón principal en pastilla terracota.
+class _PillButton extends StatelessWidget {
+  const _PillButton({required this.label, required this.onPressed, this.icon});
+
+  final String label;
+  final IconData? icon;
+  final VoidCallback? onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton(
+      style: FilledButton.styleFrom(
+        backgroundColor: _brand,
+        disabledBackgroundColor: _brand.withValues(alpha: 0.4),
+        foregroundColor: Colors.white,
+        disabledForegroundColor: Colors.white,
+        minimumSize: const Size.fromHeight(54),
+        shape: const StadiumBorder(),
+        textStyle: const TextStyle(
+          fontFamily: ContigoTheme.bodyFontFamily,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+      onPressed: onPressed,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[Icon(icon, size: 20), const SizedBox(width: 10)],
+          Flexible(child: Text(label, textAlign: TextAlign.center)),
+        ],
+      ),
+    );
+  }
+}
+
+/// Actividad seleccionable en forma de pastilla. Las actividades propias
+/// pueden eliminarse ([onDelete]).
+class _ActivityChip extends StatelessWidget {
+  const _ActivityChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.onDelete,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final VoidCallback? onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final foreground = selected ? Colors.white : ContigoColors.ink;
+    return Material(
+      color: selected ? _brand : Colors.white,
+      shape: StadiumBorder(
+        side: BorderSide(color: selected ? _brand : _chipBorder, width: 1.5),
+      ),
+      child: InkWell(
+        customBorder: const StadiumBorder(),
+        onTap: onTap,
+        child: Padding(
+          padding: EdgeInsets.fromLTRB(16, 10, onDelete == null ? 16 : 6, 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Semantics(
+                button: true,
+                selected: selected,
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 20 / 14,
+                    fontWeight: FontWeight.w600,
+                    color: foreground,
+                  ),
+                ),
+              ),
+              if (onDelete != null) ...[
+                const SizedBox(width: 4),
+                Tooltip(
+                  message: 'Eliminar actividad $label',
+                  child: InkResponse(
+                    onTap: onDelete,
+                    radius: 16,
+                    child: Padding(
+                      padding: const EdgeInsets.all(2),
+                      child: Icon(
+                        Icons.close,
+                        size: 16,
+                        color: selected ? Colors.white : ContigoColors.inkMuted,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// «+ Agregar actividad» con borde punteado.
+class _AddActivityChip extends StatelessWidget {
+  const _AddActivityChip({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return DashedBorder(
+      color: _chipBorder,
+      radius: 999,
+      child: Material(
+        color: Colors.transparent,
+        shape: const StadiumBorder(),
+        child: InkWell(
+          customBorder: const StadiumBorder(),
+          onTap: onPressed,
+          child: const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.add, size: 20, color: _brand),
+                SizedBox(width: 6),
+                Text(
+                  'Agregar actividad',
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 20 / 14,
+                    fontWeight: FontWeight.w600,
+                    color: _brand,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Tarjeta «Escribirle»: asistente simulado para el mensaje de cercanía.
 class _AssistantCard extends StatelessWidget {
   const _AssistantCard({
     required this.recipient,
@@ -952,346 +1366,97 @@ class _AssistantCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          const Text(
-            'Mensaje para tejer cercanía',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+    return _SectionCard(
+      overline: 'Escribirle',
+      title: 'Mensaje para tejer cercanía',
+      children: [
+        const Text(
+          'Una herramienta con inteligencia artificial te ayuda a crear un '
+          'borrador para comunicarte con alguien de confianza.',
+          style: TextStyle(
+            fontSize: 15,
+            height: 22 / 15,
+            color: ContigoColors.inkMuted,
           ),
-          const SizedBox(height: 6),
-          const Text(
-            'Una herramienta con inteligencia artificial te ayuda a crear un '
-            'borrador para comunicarte con alguien de confianza.',
-            style: TextStyle(
-              fontSize: 13,
-              height: 18 / 13,
-              color: ContigoColors.inkMuted,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: _brandSoft,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.info_outline, size: 18, color: _brand),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'IA basada en artículos revisados por el equipo investigador',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: _brand,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 12),
-          const _WarmNote(
-            'La IA propone un borrador. Tú decides qué editar y enviar. El '
-            'mensaje nunca se envía automáticamente.',
-            bold: true,
-          ),
-          const SizedBox(height: 16),
-          ContigoButton(
-            label: 'Ayúdame a escribirle',
-            variant: ContigoButtonVariant.secondary,
-            fullWidth: true,
-            onPressed: onHelp,
-          ),
-          if (prepared) ...[
-            const SizedBox(height: 10),
-            Semantics(
-              liveRegion: true,
-              child: Text(
-                'Borrador preparado para $recipient en esta demo. No se ha '
-                'enviado.',
-                style: const TextStyle(fontSize: 13, color: _success),
-              ),
-            ),
-          ],
-          const SizedBox(height: 10),
-          const Text(
-            'Esta herramienta no reemplaza la orientación profesional ni '
-            'ofrece consejos clínicos.',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 11,
-              height: 16 / 11,
-              color: ContigoColors.inkMuted,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MeetingCard extends StatelessWidget {
-  const _MeetingCard({
-    super.key,
-    required this.recipient,
-    required this.options,
-    required this.selected,
-    required this.prepared,
-    required this.onSelect,
-    required this.onPrepare,
-  });
-
-  final String recipient;
-  final List<String> options;
-  final String? selected;
-  final bool prepared;
-  final ValueChanged<String?> onSelect;
-  final VoidCallback onPrepare;
-
-  @override
-  Widget build(BuildContext context) {
-    // Tarjeta con franja superior de marca (`borderTop: 4px solid C.brand`).
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _border),
-        boxShadow: const [
-          BoxShadow(color: Color(0x12_3A3238), blurRadius: 16, offset: Offset(0, 4)),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(15),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const ColoredBox(color: _brand, child: SizedBox(height: 4)),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-              child: _content(),
-            ),
-          ],
         ),
-      ),
-    );
-  }
-
-  Widget _content() {
-    return Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
+        const SizedBox(height: 14),
+        Container(
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+          decoration: BoxDecoration(
+            color: _warmSoft,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: const Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: _brandSoft,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.calendar_today_outlined, color: _brand),
+              Padding(
+                padding: EdgeInsets.only(top: 1),
+                child: Icon(Icons.info_outline, size: 18, color: _warmText),
               ),
-              const SizedBox(width: 12),
+              SizedBox(width: 10),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Programar un encuentro',
-                      style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Elige una actividad y prepara una invitación para $recipient.',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        height: 18 / 13,
-                        color: ContigoColors.inkMuted,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            '¿Qué espacio quieres proponer?',
-            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 7),
-          DropdownButtonFormField<String>(
-            key: ValueKey('${options.length}:$selected'),
-            initialValue: selected,
-            isExpanded: true,
-            hint: const Text('Selecciona una actividad'),
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide(
-                  color: selected != null ? _brand : _border,
-                  width: 1.5,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: _brand, width: 1.5),
-              ),
-            ),
-            items: [
-              for (final option in options.toSet())
-                DropdownMenuItem(value: option, child: Text(option)),
-            ],
-            onChanged: onSelect,
-          ),
-          const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            decoration: BoxDecoration(
-              color: _soft,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(Icons.person_outline, size: 18, color: _brand),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                child: Text.rich(
+                  TextSpan(
                     children: [
-                      const Text(
-                        'Enviar a',
-                        style: TextStyle(fontSize: 11, color: ContigoColors.inkMuted),
+                      TextSpan(
+                        text: 'La IA propone un borrador. Tú decides qué editar '
+                            'y enviar. El mensaje nunca se envía '
+                            'automáticamente.',
+                        style: TextStyle(fontWeight: FontWeight.w700),
                       ),
-                      Text(
-                        recipient,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      TextSpan(
+                        text: ' IA basada en artículos revisados por el equipo '
+                            'investigador.',
                       ),
                     ],
                   ),
-                ),
-                const Flexible(child: _Chip(label: 'Contacto de confianza')),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          ContigoButton(
-            label: 'Preparar mensaje',
-            fullWidth: true,
-            icon: const Icon(Icons.chat_bubble_outline),
-            onPressed: selected == null ? null : onPrepare,
-          ),
-          if (prepared) ...[
-            const SizedBox(height: 12),
-            Semantics(
-              liveRegion: true,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                decoration: BoxDecoration(
-                  color: _successSoft,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.check_circle_outline, color: _success, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Borrador preparado para $recipient. El envío real está '
-                        'pendiente de integración.',
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: _success,
-                        ),
-                      ),
-                    ),
-                  ],
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 19 / 13,
+                    color: _warmText,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ],
-    );
-  }
-}
-
-class _Overline extends StatelessWidget {
-  const _Overline(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Text(
-        text.toUpperCase(),
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 0.5,
-          color: ContigoColors.inkMuted,
+            ],
+          ),
         ),
-      ),
-    );
-  }
-}
-
-class _DashedAddButton extends StatelessWidget {
-  const _DashedAddButton({required this.onPressed});
-
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return OutlinedButton.icon(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: _brand,
-        side: const BorderSide(color: _border, width: 1.5),
-        minimumSize: const Size.fromHeight(46),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        textStyle: const TextStyle(fontFamily: ContigoTheme.bodyFontFamily, fontSize: 14, fontWeight: FontWeight.w600),
-      ),
-      onPressed: onPressed,
-      icon: const Icon(Icons.add, size: 20),
-      label: const Text('Agregar actividad'),
+        const SizedBox(height: 16),
+        _PillButton(
+          label: 'Ayúdame a escribirle',
+          icon: Icons.edit_outlined,
+          onPressed: onHelp,
+        ),
+        if (prepared) ...[
+          const SizedBox(height: 10),
+          Semantics(
+            liveRegion: true,
+            child: Text(
+              'Borrador preparado para $recipient en esta demo. No se ha '
+              'enviado.',
+              style: const TextStyle(fontSize: 13, color: _success),
+            ),
+          ),
+        ],
+        const SizedBox(height: 10),
+        const Text(
+          'Esta herramienta no reemplaza la orientación profesional ni '
+          'ofrece consejos clínicos.',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 12,
+            height: 17 / 12,
+            color: ContigoColors.inkMuted,
+          ),
+        ),
+      ],
     );
   }
 }
 
 class _WarmNote extends StatelessWidget {
-  const _WarmNote(this.text, {this.bold = false});
+  const _WarmNote(this.text);
 
   final String text;
-  final bool bold;
 
   @override
   Widget build(BuildContext context) {
@@ -1308,7 +1473,7 @@ class _WarmNote extends StatelessWidget {
           fontSize: 12,
           height: 17 / 12,
           color: _warmText,
-          fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
+          fontWeight: FontWeight.w400,
         ),
       ),
     );

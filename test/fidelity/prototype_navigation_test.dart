@@ -333,8 +333,8 @@ void main() {
         '${AppPath.connectionPerson}?p=${person.id}&a=meeting',
       );
 
-      await _tap(tester, find.text('Selecciona una actividad'));
-      await _tap(tester, find.text('Tomar un café juntos').last);
+      // Las actividades se eligen como opciones en pastilla (propuesta A).
+      await _tap(tester, find.text('Tomar un café juntos'));
       await _tap(tester, find.text('Preparar mensaje'));
       expect(find.text('Invitar a ${person.name}'), findsOneWidget);
       await _tap(tester, find.text('Revisar invitación para ${person.name}'));
@@ -344,6 +344,48 @@ void main() {
         find.textContaining('El envío real está pendiente de integración'),
         findsOneWidget,
       );
+    });
+
+    testWidgets('cancelar la invitación editada no rompe la pantalla',
+        (tester) async {
+      final seed = createDemoJourney();
+      final person = validCaregivers(seed).first;
+      final c = await _container(seed);
+      addTearDown(c.dispose);
+      await _pump(
+        tester,
+        c,
+        '${AppPath.connectionPerson}?p=${person.id}&a=meeting',
+      );
+
+      await _tap(tester, find.text('Tomar un café juntos'));
+      await _tap(tester, find.text('Preparar mensaje'));
+      await tester.enterText(find.byType(TextField).last, 'Texto editado');
+      await tester.pumpAndSettle();
+      await _tap(tester, find.text('Cancelar'));
+      expect(tester.takeException(), isNull);
+      expect(find.text('Conexión con ${person.name}'), findsOneWidget);
+
+      // Se puede volver a preparar con el texto de la actividad.
+      await _tap(tester, find.text('Preparar mensaje'));
+      expect(find.textContaining('tomar un café juntos'), findsOneWidget);
+    });
+
+    testWidgets('la hoja de invitaciones se desplaza sin desbordarse',
+        (tester) async {
+      final c = await _container(createDemoJourney());
+      addTearDown(c.dispose);
+      await _pump(tester, c, AppPath.networkMap, size: const Size(360, 640));
+
+      final manage = find.text('Gestionar invitaciones y vínculos');
+      await tester.scrollUntilVisible(
+        manage,
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      await _tap(tester, manage);
+      expect(tester.takeException(), isNull);
+      expect(find.text('Invitaciones y vínculos'), findsOneWidget);
     });
 
     testWidgets('sin vínculo activo M8 bloquea y ofrece volver', (tester) async {
@@ -364,14 +406,19 @@ void main() {
       addTearDown(c.dispose);
       await _pump(tester, c, AppPath.pcsHome);
 
+      // La simulación está en las herramientas de demostración, plegadas.
+      await _tap(tester, find.text('Herramientas de demostración'));
       await _tap(tester, find.text('Simular notificación'));
       expect(c.read(notificationsControllerProvider).visible, isNotNull);
+      // El aviso aparece arriba del inicio: se vuelve a la parte superior.
+      await tester.drag(find.byType(ListView).first, const Offset(0, 4000));
+      await tester.pumpAndSettle();
       await tester.tap(find.byTooltip('Cerrar notificación').first);
       await tester.pumpAndSettle();
       final state = c.read(notificationsControllerProvider);
       expect(state.visible, isNull);
       expect(state.inbox, hasLength(1));
-      expect(find.text('Ver notificaciones simuladas (1)'), findsOneWidget);
+      expect(find.text('Avisos simulados recibidos (1)'), findsOneWidget);
     });
 
     testWidgets('una notificación de encuentro abre M8 con esa intención',
