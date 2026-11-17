@@ -97,7 +97,7 @@ void main() {
     expect(find.text('Necesitas un vínculo activo'), findsNothing);
 
     // El panel demo es plegable, como el `<details>` del prototipo.
-    final panel = find.text('Herramientas de demostración del cuidador');
+    final panel = find.text('Herramientas de demostración');
     await tester.ensureVisible(panel);
     await tester.pumpAndSettle();
     await tester.tap(panel);

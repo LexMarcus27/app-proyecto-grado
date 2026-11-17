@@ -344,7 +344,7 @@ Future<void> showPendingContentSheet(
     backgroundColor: Colors.white,
     builder: (sheetContext) {
       final textTheme = Theme.of(sheetContext).textTheme;
-      return Padding(
+      return SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
         child: Column(
           mainAxisSize: MainAxisSize.min,

@@ -68,7 +68,7 @@ class _RelationEvaluationScreenState
       isScrollControlled: true,
       builder: (sheetContext) {
         final textTheme = Theme.of(sheetContext).textTheme;
-        return Padding(
+        return SingleChildScrollView(
           padding: EdgeInsets.fromLTRB(
             20,
             0,

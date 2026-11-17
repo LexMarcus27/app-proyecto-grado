@@ -196,6 +196,15 @@ class _AvatarPainter extends CustomPainter {
     canvas.save();
     canvas.scale(scale);
     canvas.drawCircle(const Offset(37, 37), 35, Paint()..color = background);
+    // La figura se recorta al círculo para que el cuerpo no sobresalga.
+    canvas.save();
+    canvas.clipPath(
+      Path()..addOval(Rect.fromCircle(center: const Offset(37, 37), radius: 35)),
+    );
+    canvas.drawCircle(const Offset(37, 39), 9, Paint()..color = figure);
+    canvas.drawPath(_body, Paint()..color = figure);
+    canvas.restore();
+    // Aro blanco por encima de la figura.
     canvas.drawCircle(
       const Offset(37, 37),
       35,
@@ -204,8 +213,6 @@ class _AvatarPainter extends CustomPainter {
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3,
     );
-    canvas.drawCircle(const Offset(37, 39), 9, Paint()..color = figure);
-    canvas.drawPath(_body, Paint()..color = figure);
     canvas.restore();
   }
 
