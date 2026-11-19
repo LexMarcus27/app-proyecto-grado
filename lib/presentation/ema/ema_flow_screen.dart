@@ -274,6 +274,7 @@ class _EmaFlowScreenState extends ConsumerState<EmaFlowScreen>
       final today = emaDayKey();
       if (next.day != today) {
         next = prepareEmaDay(next, savedReference, today);
+        _announceNewDay();
       }
 
       // (2) Revocación mid-cuestionario: la referencia del borrador se volvió
@@ -426,10 +427,25 @@ class _EmaFlowScreenState extends ConsumerState<EmaFlowScreen>
 
     final fresh = prepareEmaDay(current, savedReference, today);
     await _update(fresh);
+    _announceNewDay();
 
     // Re-aplica el gating del nuevo día (p. ej. referencia inactiva → revisión).
     final journey = ref.read(networkJourneyProvider).value;
     if (journey != null) await _reconcile(journey);
+  }
+
+  /// Texto del aviso de reinicio por cambio de día (prototipo,
+  /// `src/screens/ema.tsx`).
+  static const String newDayNotice =
+      'Comenzó un nuevo día. Puedes hacer el registro de hoy.';
+
+  /// Avisa que el registro abierto se reinició por cambio de día, para que no
+  /// parezca que las respuestas se perdieron por un error (auditoría 2, H-02).
+  void _announceNewDay() {
+    if (!mounted) return;
+    ScaffoldMessenger.maybeOf(context)
+      ?..hideCurrentSnackBar()
+      ..showSnackBar(const SnackBar(content: Text(newDayNotice)));
   }
 
   /// Vuelve al ítem presentado anterior.

@@ -61,6 +61,14 @@ EmaFlowGate resolveEmaFlowGate({
     return EmaFlowGate.questionnaire;
   }
 
+  // El registro de hoy ya está completo: se muestra su resultado (como
+  // `showResult = view === "result" || draft.completed` del prototipo), aunque
+  // la referencia haya dejado de estar activa después. La revisión de la
+  // referencia llegará con el borrador del día siguiente (auditoría 2, H-01).
+  if (draft.completed) {
+    return EmaFlowGate.questionnaire;
+  }
+
   if (emaStaleReferenceMode(savedReference, journey) !=
       EmaReferenceReviewMode.none) {
     return EmaFlowGate.staleReference;
