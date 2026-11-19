@@ -68,9 +68,11 @@ class DemoScenarioControlsScreen extends ConsumerWidget {
                         'Existe una persona vinculada activa (M.). Ejercita la '
                         'selección de referencia y el bloque de relación.',
                     selected: current == DemoScenario.withActiveLink,
-                    onSelect: () => _select(
+                    onSelect: () => _confirmAndSelect(
+                      context,
                       ref,
                       DemoScenario.withActiveLink,
+                      'Con persona vinculada',
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -80,9 +82,11 @@ class DemoScenarioControlsScreen extends ConsumerWidget {
                         'No hay ninguna persona vinculada activa. Ejercita la '
                         'omisión del bloque de relación (camino de 6 ítems).',
                     selected: current == DemoScenario.withoutActiveLink,
-                    onSelect: () => _select(
+                    onSelect: () => _confirmAndSelect(
+                      context,
                       ref,
                       DemoScenario.withoutActiveLink,
+                      'Sin persona vinculada',
                     ),
                   ),
                   const SizedBox(height: 12),
@@ -135,6 +139,46 @@ class DemoScenarioControlsScreen extends ConsumerWidget {
     );
   }
 
+  /// Pide confirmación antes de aplicar un escenario: aplicarlo **reemplaza**
+  /// el mapa de red y los datos guardados en el teléfono por la semilla del
+  /// escenario, sin posibilidad de deshacer (auditoría H-02). Devuelve `true`
+  /// si se confirmó.
+  Future<bool> _confirmReplace(BuildContext context, String title) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: Colors.white,
+        title: const Text('¿Cambiar el escenario de demostración?'),
+        content: Text(
+          'Se reemplazarán el mapa de red y los datos guardados en este '
+          'teléfono por los del escenario «$title». Esta acción no se puede '
+          'deshacer.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Cambiar escenario'),
+          ),
+        ],
+      ),
+    );
+    return confirmed == true;
+  }
+
+  Future<void> _confirmAndSelect(
+    BuildContext context,
+    WidgetRef ref,
+    DemoScenario scenario,
+    String title,
+  ) async {
+    if (!await _confirmReplace(context, title)) return;
+    await _select(ref, scenario);
+  }
+
   /// Aplica el escenario reusando el controlador de 2.10 y refresca la
   /// referencia EMA mostrada en el mapa de red, ya que cambiar de escenario
   /// puede dejar obsoleta la selección guardada.
@@ -162,6 +206,10 @@ class DemoScenarioControlsScreen extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
   ) async {
+    if (!await _confirmReplace(context, 'PCS nueva (onboarding no iniciado)')) {
+      return;
+    }
+    if (!context.mounted) return;
     await _select(ref, DemoScenario.freshPcsOnboarding);
     if (!context.mounted) return;
     context.goNamed(AppRoute.pcsOnboarding);

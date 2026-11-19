@@ -83,4 +83,28 @@ void main() {
       expect(s.questions.length, connectionQuestions.length + 1);
     });
   });
+
+  group('pcsLinkKey (auditoría H-01)', () {
+    test('usa la asociación de la tupla autorizada, no otra activa de la persona',
+        () {
+      // M. tuvo un cuidador anterior cuya asociación quedó activa y figura
+      // primero; la invitación aceptada apunta ahora a caregiver-m.
+      final base = createDemoJourney();
+      final journey = base.copyWith(associations: [
+        const CareAssociation(
+          id: 'association-old-m',
+          pcsId: currentPcsId,
+          caregiverId: 'caregiver-anterior',
+          personId: 'demo-m',
+          active: true,
+        ),
+        ...base.associations,
+      ]);
+      expect(canStrengthenRelationship(journey, 'demo-m'), isTrue);
+      expect(
+        pcsLinkKey(journey, 'demo-m'),
+        '$currentPcsId|demo-m|association-demo-m',
+      );
+    });
+  });
 }

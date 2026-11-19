@@ -107,8 +107,18 @@ NetworkPerson? pcsConnectionPartner(JourneyState journey) {
 String? pcsLinkKey(JourneyState journey, String personId,
     {String pcsId = currentPcsId}) {
   if (!canStrengthenRelationship(journey, personId, pcsId: pcsId)) return null;
+  String? caregiverId;
+  for (final p in journey.people) {
+    if (p.id == personId) caregiverId = p.caregiverId;
+  }
+  // La clave usa la misma asociación que autoriza el vínculo: la de la tupla
+  // exacta (persona, PCS, cuidador vigente). Una asociación anterior de otro
+  // cuidador que siga activa no debe prestar su estado (auditoría H-01).
   for (final a in journey.associations) {
-    if (a.active && a.personId == personId && a.pcsId == pcsId) {
+    if (a.active &&
+        a.personId == personId &&
+        a.pcsId == pcsId &&
+        a.caregiverId == caregiverId) {
       return '$pcsId|$personId|${a.id}';
     }
   }
