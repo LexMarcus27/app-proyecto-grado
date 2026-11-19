@@ -58,6 +58,28 @@ void main() {
     });
 
     testWidgets(
+      'cancelar el cambio de escenario conserva el mapa guardado (H-02)',
+      (tester) async {
+        final repository = LocalJourneyRepository(prefs);
+        final base = createDemoJourney();
+        await repository.save(base.copyWith(people: [
+          base.people.first.copyWith(id: 'persona-propia', name: 'Persona propia'),
+        ]));
+        await tester.pumpWidget(_host(prefs));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Sin persona vinculada'));
+        await tester.pumpAndSettle();
+        expect(find.text('¿Cambiar el escenario de demostración?'), findsOneWidget);
+        await tester.tap(find.text('Cancelar'));
+        await tester.pumpAndSettle();
+
+        final kept = await LocalJourneyRepository(prefs).loadJourney();
+        expect(kept.people.single.id, 'persona-propia');
+      },
+    );
+
+    testWidgets(
       'alternar entre escenarios persiste la semilla a través del repositorio',
       (tester) async {
         await tester.pumpWidget(_host(prefs));
@@ -70,6 +92,9 @@ void main() {
         // "Sin persona vinculada" → validCaregivers vacío.
         await tester.tap(find.text('Sin persona vinculada'));
         await tester.pumpAndSettle();
+        // Cambiar de escenario reemplaza los datos: se confirma (H-02).
+        await tester.tap(find.text('Cambiar escenario'));
+        await tester.pumpAndSettle();
 
         final withoutLink = await repository.loadJourney();
         expect(
@@ -80,6 +105,9 @@ void main() {
 
         // "Con persona vinculada" → validCaregivers contiene demo-m.
         await tester.tap(find.text('Con persona vinculada'));
+        await tester.pumpAndSettle();
+        // Cambiar de escenario reemplaza los datos: se confirma (H-02).
+        await tester.tap(find.text('Cambiar escenario'));
         await tester.pumpAndSettle();
 
         final withLink = await repository.loadJourney();

@@ -50,6 +50,8 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(choice);
     await tester.pumpAndSettle();
+    await tester.tap(find.text('Cambiar escenario'));
+    await tester.pumpAndSettle();
 
     // Preparó el escenario (onboarding sin iniciar) y abrió la bienvenida.
     expect(find.text('Antes de empezar, reconoce tu red'), findsOneWidget);
