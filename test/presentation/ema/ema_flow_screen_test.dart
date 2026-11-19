@@ -225,6 +225,32 @@ void main() {
       );
     });
 
+    test('questionnaire: registro de hoy completo aunque la referencia se '
+        'revocara después (auditoría 2, H-01)', () {
+      final linked = seedForScenario(DemoScenario.withActiveLink);
+      final reference = emaReferenceForPerson(linked, 'demo-m')!;
+      var draft = createEmaDraft(reference);
+      for (final i in emaQuestionIndices(draft)) {
+        draft = setEmaAnswer(
+          draft,
+          i,
+          emaItems[i].kind == EmaItemKind.binary ? false : 0,
+        );
+      }
+      draft = draft.copyWith(completed: true);
+      final revoked = linked.copyWith(associations: [
+        for (final a in linked.associations) a.copyWith(active: false),
+      ]);
+      expect(
+        resolveEmaFlowGate(
+          savedReference: reference,
+          journey: revoked,
+          draft: draft,
+        ),
+        EmaFlowGate.questionnaire,
+      );
+    });
+
     test('questionnaire: borrador ya omitido salta cualquier revisión', () {
       final journey = seedForScenario(DemoScenario.withoutActiveLink);
       final reference = EmaReference(

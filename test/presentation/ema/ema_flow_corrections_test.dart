@@ -467,6 +467,12 @@ void main() {
       expect(resumed.relationshipOmission, isNull);
       expect(resumed.reference, referenceM);
       expect(find.text('Hilo 1 de 9'), findsOneWidget);
+      // El reinicio se avisa para que no parezca una pérdida por error
+      // (auditoría 2, H-02).
+      expect(
+        find.text('Comenzó un nuevo día. Puedes hacer el registro de hoy.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('un registro COMPLETADO de ayer no se muestra como el de hoy '
