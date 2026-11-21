@@ -13,6 +13,7 @@ import '../../domain/journey/journey.dart';
 import '../authorization/gating.dart';
 import '../widgets/widgets.dart';
 import 'connection_selection.dart';
+import 'pcs_connection_questions_controller.dart' show pcsLinkKey;
 
 
 // Tokens del prototipo (`C` de `ui.tsx`).
@@ -70,8 +71,15 @@ class ConnectionPersonScreen extends ConsumerWidget {
         if (person == null || !gating.canStrengthen(person.id)) {
           return _NoAccessView(gating: gating);
         }
+        // La vista se identifica por el vínculo completo (PCS, persona y
+        // asociación autorizada) además de la intención: si la asociación se
+        // reemplaza por otra de la misma persona sin pasar por la revocación,
+        // la vista se reinicia y no arrastra el estado de la anterior
+        // (auditoría 3, S3-H05).
         return _ConnectionView(
-          key: ValueKey('${person.id}:${initialAction?.wireValue}'),
+          key: ValueKey(
+            '${pcsLinkKey(journey, person.id)}:${initialAction?.wireValue}',
+          ),
           recipient: person.name,
           initialAction: initialAction,
         );
