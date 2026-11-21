@@ -917,6 +917,7 @@ class _IntimateMessageBodyState extends ConsumerState<_IntimateMessageBody> {
   Timer? _returnTimer;
 
   void _prepare() {
+    ref.read(intimateMessageControllerProvider.notifier).saveDraft();
     setState(() => _prepared = true);
     _returnTimer = Timer(const Duration(seconds: 2), () {
       if (mounted) context.goBack(AppRoute.caregiverConnections);
@@ -1108,19 +1109,27 @@ class _IntimateMessageBodyState extends ConsumerState<_IntimateMessageBody> {
             fullWidth: true,
             onPressed: message.text.trim().isEmpty
                 ? null
-                : () => ScaffoldMessenger.of(context)
-                  ..hideCurrentSnackBar()
-                  ..showSnackBar(const SnackBar(
-                    content:
-                        Text('Borrador de prueba conservado en esta sesión.'),
-                  )),
+                : () {
+                    controller.saveDraft();
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(const SnackBar(
+                        content: Text(
+                          'Borrador de prueba conservado en esta sesión.',
+                        ),
+                      ));
+                  },
           ),
           const SizedBox(height: 10),
           ContigoButton(
             label: 'Cancelar',
             variant: ContigoButtonVariant.tertiary,
             fullWidth: true,
-            onPressed: () => context.goBack(AppRoute.caregiverConnections),
+            onPressed: () {
+              // Descarta lo no guardado: al reabrir se ve el último borrador.
+              controller.discardEdits();
+              context.goBack(AppRoute.caregiverConnections);
+            },
           ),
         ],
       ),

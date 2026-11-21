@@ -202,4 +202,23 @@ void main() {
     expect(find.text('Registro de prueba completado'), findsNothing);
     expect(find.text('Guardar registro'), findsOneWidget);
   });
+
+  testWidgets('mensaje íntimo: «Cancelar» descarta lo no guardado (H-03)',
+      (tester) async {
+    final c = await _container(_active);
+    addTearDown(c.dispose);
+    await _pump(tester, c, AppPath.caregiverIntimateMessage);
+    await tester.enterText(find.byType(TextField), 'Texto guardado.');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guardar como borrador'));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Edición que se cancela.');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Cancelar'));
+    await tester.pumpAndSettle();
+    c.read(routerProvider).push(AppPath.caregiverIntimateMessage);
+    await tester.pumpAndSettle();
+    expect(find.text('Texto guardado.'), findsWidgets);
+    expect(find.text('Edición que se cancela.'), findsNothing);
+  });
 }
