@@ -415,6 +415,69 @@ void main() {
       expect(find.text('Actividad del vínculo anterior'), findsNothing);
     });
 
+    testWidgets('M8 cierra la hoja del editor si la asociación se reemplaza '
+        'con ella abierta (auditoría 3, S3-H05)', (tester) async {
+      final seed = createDemoJourney();
+      final c = await _container(seed);
+      addTearDown(c.dispose);
+      await _pump(tester, c, '${AppPath.connectionPerson}?p=demo-m',
+          size: const Size(412, 2400));
+
+      final help = find.text('Ayúdame a escribirle');
+      await tester.ensureVisible(help);
+      await tester.pumpAndSettle();
+      await tester.tap(help);
+      await tester.pump();
+      await tester.pump(simulatedDraftDelay);
+      await tester.pumpAndSettle();
+      final field = find.descendant(
+        of: find.byType(BottomSheet),
+        matching: find.byType(TextField),
+      );
+      await tester.enterText(field, 'Borrador del vínculo anterior');
+      await tester.pumpAndSettle();
+      expect(find.text('Borrador del vínculo anterior'), findsOneWidget);
+
+      final next = seed.copyWith(associations: [
+        for (final a in seed.associations)
+          a.personId == 'demo-m' ? a.copyWith(id: 'asociacion-nueva-m') : a,
+      ]);
+      await c.read(journeyRepositoryProvider).save(next);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.text('Borrador del vínculo anterior'), findsNothing);
+      expect(find.text('Conexión con M.'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('M8 cierra la hoja del editor al revocar con ella abierta',
+        (tester) async {
+      final seed = createDemoJourney();
+      final c = await _container(seed);
+      addTearDown(c.dispose);
+      await _pump(tester, c, '${AppPath.connectionPerson}?p=demo-m',
+          size: const Size(412, 2400));
+
+      final help = find.text('Ayúdame a escribirle');
+      await tester.ensureVisible(help);
+      await tester.pumpAndSettle();
+      await tester.tap(help);
+      await tester.pump();
+      await tester.pump(simulatedDraftDelay);
+      await tester.pumpAndSettle();
+      expect(find.byType(BottomSheet), findsOneWidget);
+
+      await c.read(journeyRepositoryProvider).save(seed.copyWith(associations: [
+        for (final a in seed.associations) a.copyWith(active: false),
+      ]));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(BottomSheet), findsNothing);
+      expect(find.text('Conexión con M.'), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('sin vínculo activo M8 bloquea y ofrece volver', (tester) async {
       final seed = seedForScenario(DemoScenario.withoutActiveLink);
       final c = await _container(seed);

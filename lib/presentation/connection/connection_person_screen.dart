@@ -294,12 +294,56 @@ class _ConnectionViewState extends State<_ConnectionView> {
     });
   }
 
+  /// Hojas y diálogos abiertos por esta vista. Son rutas propias del
+  /// navegador: si la vista se descarta (cambio de asociación o revocación),
+  /// se cierran para que no sigan mostrando el borrador del vínculo anterior
+  /// (auditoría 3, S3-H05).
+  final List<Route<Object?>> _openRoutes = [];
+
+  /// Abre [route] registrándola para poder cerrarla al descartar la vista.
+  Future<T?> _pushTracked<T>(Route<T> route) {
+    final navigator = Navigator.of(context);
+    _openRoutes.add(route);
+    return navigator.push(route).whenComplete(() => _openRoutes.remove(route));
+  }
+
+  ModalBottomSheetRoute<T> _sheetRoute<T>(WidgetBuilder builder) {
+    final navigator = Navigator.of(context);
+    return ModalBottomSheetRoute<T>(
+      builder: builder,
+      capturedThemes:
+          InheritedTheme.capture(from: context, to: navigator.context),
+      barrierLabel: MaterialLocalizations.of(context).scrimLabel,
+      isScrollControlled: true,
+      showDragHandle: true,
+      backgroundColor: Colors.white,
+    );
+  }
+
   @override
   void dispose() {
     _timer?.cancel();
-    _composed.dispose();
-    _newActivity.dispose();
-    _inviteMessage.dispose();
+    final routes = List<Route<Object?>>.of(_openRoutes.reversed);
+    final controllers = [_composed, _newActivity, _inviteMessage];
+    if (routes.isEmpty) {
+      for (final controller in controllers) {
+        controller.dispose();
+      }
+    } else {
+      // Se retiran tras este frame (no se puede modificar el navegador
+      // mientras se finaliza el árbol) y los controladores se liberan
+      // después, cuando la hoja ya no los usa.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        for (final route in routes) {
+          if (route.isActive) route.navigator?.removeRoute(route);
+        }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          for (final controller in controllers) {
+            controller.dispose();
+          }
+        });
+      });
+    }
     super.dispose();
   }
 
@@ -327,12 +371,8 @@ class _ConnectionViewState extends State<_ConnectionView> {
 
   Future<void> _openComposer({bool generate = true}) async {
     var started = false;
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      backgroundColor: Colors.white,
-      builder: (sheetContext) => StatefulBuilder(
+    await _pushTracked(_sheetRoute<void>(
+      (sheetContext) => StatefulBuilder(
         builder: (sheetContext, sheetSetState) {
           if (generate && !started) {
             started = true;
@@ -439,19 +479,15 @@ class _ConnectionViewState extends State<_ConnectionView> {
           );
         },
       ),
-    );
+    ));
     _timer?.cancel();
     if (mounted && _loading) setState(() => _loading = false);
   }
 
   Future<void> _openContactOptions() async {
     var status = '';
-    final writeGreeting = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      backgroundColor: Colors.white,
-      builder: (sheetContext) => StatefulBuilder(
+    final writeGreeting = await _pushTracked(_sheetRoute<bool>(
+      (sheetContext) => StatefulBuilder(
         builder: (sheetContext, sheetSetState) => _SheetBody(
           title: 'Contactar a $_recipient',
           children: [
@@ -505,7 +541,7 @@ class _ConnectionViewState extends State<_ConnectionView> {
           ],
         ),
       ),
-    );
+    ));
     if (writeGreeting == true && mounted) await _openComposer();
   }
 
@@ -517,12 +553,8 @@ class _ConnectionViewState extends State<_ConnectionView> {
       ..text = 'Hola $_recipient, me gustaría que programáramos un espacio para '
           '${activity.toLowerCase()}. ¿Te gustaría? Podemos acordar el momento '
           'que nos funcione. Si ahora no puedes, está bien.';
-    final prepared = await showModalBottomSheet<bool>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      backgroundColor: Colors.white,
-      builder: (sheetContext) => StatefulBuilder(
+    final prepared = await _pushTracked(_sheetRoute<bool>(
+      (sheetContext) => StatefulBuilder(
         builder: (sheetContext, sheetSetState) => _SheetBody(
           title: 'Invitar a $_recipient',
           children: [
@@ -592,13 +624,16 @@ class _ConnectionViewState extends State<_ConnectionView> {
           ],
         ),
       ),
-    );
+    ));
     if (prepared == true && mounted) setState(() => _meetingPrepared = true);
   }
 
   Future<bool?> _confirmMeeting(BuildContext context, String text) {
-    return showDialog<bool>(
+    final navigator = Navigator.of(context);
+    return _pushTracked(DialogRoute<bool>(
       context: context,
+      themes: InheritedTheme.capture(from: context, to: navigator.context),
+      barrierLabel: MaterialLocalizations.of(context).modalBarrierDismissLabel,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: Colors.white,
         title: const Text('¿Confirmar este borrador?'),
@@ -642,7 +677,7 @@ class _ConnectionViewState extends State<_ConnectionView> {
           ),
         ),
       ),
-    );
+    ));
   }
 
   @override
