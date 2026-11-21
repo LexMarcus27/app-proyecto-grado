@@ -135,15 +135,30 @@ class _PcsQuestionsBodyState extends ConsumerState<_PcsQuestionsBody> {
     super.initState();
     // Posiciona el recorrido en la pregunta de la notificación (si aplica),
     // conservando esa pregunta y persona (acción `questions`).
-    if (widget.initialQuestion != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        final key = pcsLinkKey(widget.journey, widget.partner.id);
-        ref
-            .read(pcsConnectionQuestionsControllerProvider.notifier)
-            .focusQuestion(key, widget.initialQuestion);
-      });
+    _focusInitialQuestion();
+  }
+
+  @override
+  void didUpdateWidget(covariant _PcsQuestionsBody oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // La misma ruta puede recibir otra pregunta mientras la pantalla sigue
+    // montada (p. ej. otra notificación de preguntas): se enfoca la nueva en
+    // lugar de dejar visible la anterior (auditoría 3, caso C3).
+    if (widget.initialQuestion != oldWidget.initialQuestion) {
+      _focusInitialQuestion();
     }
+  }
+
+  void _focusInitialQuestion() {
+    final question = widget.initialQuestion;
+    if (question == null) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final key = pcsLinkKey(widget.journey, widget.partner.id);
+      ref
+          .read(pcsConnectionQuestionsControllerProvider.notifier)
+          .focusQuestion(key, question);
+    });
   }
 
   @override

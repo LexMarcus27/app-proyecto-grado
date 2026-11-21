@@ -34,6 +34,15 @@ abstract class _CareJourneyNotifier<T> extends Notifier<Map<String, T>> {
     if (key == null) return;
     state = {...state, key: update(stateForKey(key))};
   }
+
+  /// Descarta el estado del vínculo vigente (p. ej. tras completar un
+  /// registro), de modo que la siguiente entrada empiece con el formulario
+  /// vacío, como el estado local del prototipo (auditoría 3, H-01).
+  void clearCurrent() {
+    final key = _key;
+    if (key == null) return;
+    state = {...state}..remove(key);
+  }
 }
 
 // ─── Registro de la relación (MobileScreen12) ───────────────────────────────
@@ -235,13 +244,28 @@ final currentConnectionQuestionsProvider =
 /// Estado en curso del **mensaje íntimo**: texto del borrador y si ya se
 /// preparó. Portado de `MobileScreen10` con `messageKind == "intimate"`.
 class IntimateMessageState {
-  const IntimateMessageState({this.text = '', this.saved = false});
+  const IntimateMessageState({
+    this.text = '',
+    this.savedText = '',
+    this.saved = false,
+  });
 
+  /// Texto que se está editando.
   final String text;
+
+  /// Último texto guardado explícitamente («Guardar como borrador» o
+  /// «Preparar borrador»). Es el que se recupera al cancelar o al volver a
+  /// abrir el editor, como `caregiverDrafts` del prototipo (auditoría 3, H-03).
+  final String savedText;
+
   final bool saved;
 
-  IntimateMessageState copyWith({String? text, bool? saved}) =>
-      IntimateMessageState(text: text ?? this.text, saved: saved ?? this.saved);
+  IntimateMessageState copyWith({String? text, String? savedText, bool? saved}) =>
+      IntimateMessageState(
+        text: text ?? this.text,
+        savedText: savedText ?? this.savedText,
+        saved: saved ?? this.saved,
+      );
 }
 
 class IntimateMessageController
@@ -251,6 +275,14 @@ class IntimateMessageController
 
   void setText(String value) => edit((current) => current.copyWith(text: value));
   void markSaved() => edit((current) => current.copyWith(saved: true));
+
+  /// Guarda explícitamente el texto actual como borrador.
+  void saveDraft() =>
+      edit((current) => current.copyWith(savedText: current.text.trim()));
+
+  /// Descarta las ediciones no guardadas y vuelve al último borrador guardado.
+  void discardEdits() =>
+      edit((current) => current.copyWith(text: current.savedText));
 }
 
 final intimateMessageControllerProvider = NotifierProvider<

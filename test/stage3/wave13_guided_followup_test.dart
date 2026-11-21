@@ -87,6 +87,19 @@ void main() {
     await _pump(tester, c, '${AppPath.pcsConnectionQuestions}?q=${Uri.encodeComponent(q)}');
     expect(find.text(q), findsOneWidget, reason: 'MobileScreen14 incluye la pregunta inicial de la notificación aunque no pertenezca al banco de seis');
   });
+  testWidgets('Otra pregunta en la misma ruta con la pantalla abierta se enfoca (auditoría 3, C3)', (tester) async {
+    final c = await _container(_withSelected);
+    addTearDown(c.dispose);
+    final animals = notificationTemplates.firstWhere((t) => t.id == 'questions-animals').question!;
+    final movie = notificationTemplates.firstWhere((t) => t.id == 'questions-movie').question!;
+    await _pump(tester, c, '${AppPath.pcsConnectionQuestions}?q=${Uri.encodeComponent(animals)}');
+    expect(find.text(animals), findsOneWidget);
+    // Misma ruta, otra pregunta, sin desmontar la pantalla.
+    c.read(routerProvider).go('${AppPath.pcsConnectionQuestions}?q=${Uri.encodeComponent(movie)}');
+    await tester.pumpAndSettle();
+    expect(find.text(movie), findsOneWidget);
+    expect(find.text(animals), findsNothing);
+  });
   testWidgets('Una asociación nueva con la misma persona no hereda la respuesta PCS', (tester) async {
     final seed = _withSelected;
     final c = await _container(seed);
