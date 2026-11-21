@@ -388,6 +388,33 @@ void main() {
       expect(find.text('Invitaciones y vínculos'), findsOneWidget);
     });
 
+    testWidgets('M8 no arrastra el estado si la asociación se reemplaza '
+        'con la pantalla abierta (auditoría 3, S3-H05)', (tester) async {
+      final seed = createDemoJourney();
+      final c = await _container(seed);
+      addTearDown(c.dispose);
+      await _pump(tester, c, '${AppPath.connectionPerson}?p=demo-m',
+          size: const Size(412, 2400));
+
+      await _tap(tester, find.text('Agregar actividad'));
+      await tester.enterText(find.byType(TextField), 'Actividad del vínculo anterior');
+      await _tap(tester, find.text('Guardar'));
+      expect(find.text('Actividad del vínculo anterior'), findsOneWidget);
+
+      // Reemplazo directo por otra asociación de la misma persona, sin pasar
+      // por un estado revocado.
+      final next = seed.copyWith(associations: [
+        for (final a in seed.associations)
+          a.personId == 'demo-m' ? a.copyWith(id: 'asociacion-nueva-m') : a,
+      ]);
+      expect(canStrengthenRelationship(next, 'demo-m'), isTrue);
+      await c.read(journeyRepositoryProvider).save(next);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Conexión con M.'), findsOneWidget);
+      expect(find.text('Actividad del vínculo anterior'), findsNothing);
+    });
+
     testWidgets('sin vínculo activo M8 bloquea y ofrece volver', (tester) async {
       final seed = seedForScenario(DemoScenario.withoutActiveLink);
       final c = await _container(seed);
