@@ -372,6 +372,11 @@ class _LinkCheckInBodyState extends ConsumerState<_LinkCheckInBody> {
   /// 2600)` del prototipo). Se cancela si la pantalla se desmonta antes.
   Timer? _returnTimer;
 
+  /// Confirmación de esta entrada. Es transitoria: el registro completado se
+  /// descarta del estado por vínculo y una nueva entrada muestra el formulario
+  /// vacío (auditoría 3, H-01).
+  bool _saved = false;
+
   @override
   void dispose() {
     _returnTimer?.cancel();
@@ -379,7 +384,8 @@ class _LinkCheckInBodyState extends ConsumerState<_LinkCheckInBody> {
   }
 
   void _save(LinkCheckInController controller) {
-    controller.markSaved();
+    setState(() => _saved = true);
+    controller.clearCurrent();
     ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
       content: Text('Registro de prueba completado. No se ha enviado.'),
     ));
@@ -399,7 +405,7 @@ class _LinkCheckInBodyState extends ConsumerState<_LinkCheckInBody> {
         ref.watch(currentLinkCheckInProvider) ?? const LinkCheckInState();
     final controller = ref.read(linkCheckInControllerProvider.notifier);
 
-    if (checkIn.saved) {
+    if (_saved) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(40),
@@ -513,12 +519,41 @@ class CaregiverEncounterScreen extends StatelessWidget {
   }
 }
 
-class _EncounterBody extends ConsumerWidget {
+class _EncounterBody extends ConsumerStatefulWidget {
   const _EncounterBody({required this.pcsName});
   final String pcsName;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_EncounterBody> createState() => _EncounterBodyState();
+}
+
+class _EncounterBodyState extends ConsumerState<_EncounterBody> {
+  /// Confirmación transitoria de esta entrada (auditoría 3, H-01): tras
+  /// guardar se avisa, se vuelve a Tejiendo vínculos y la siguiente entrada
+  /// empieza con el formulario vacío.
+  bool _saved = false;
+  Timer? _returnTimer;
+
+  @override
+  void dispose() {
+    _returnTimer?.cancel();
+    super.dispose();
+  }
+
+  void _save(EncounterController controller) {
+    setState(() => _saved = true);
+    controller.clearCurrent();
+    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+      content: Text('Registro de prueba completado. No se ha enviado.'),
+    ));
+    _returnTimer = Timer(const Duration(milliseconds: 2600), () {
+      if (mounted) context.goBack(AppRoute.caregiverConnections);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final pcsName = widget.pcsName;
     final textTheme = Theme.of(context).textTheme;
     // El estado se conserva por contexto completo (sobrevive a una revocación y
     // se recupera al reactivar la misma asociación); no vive en el widget.
@@ -526,7 +561,7 @@ class _EncounterBody extends ConsumerWidget {
         ref.watch(currentEncounterProvider) ?? EncounterState();
     final controller = ref.read(encounterControllerProvider.notifier);
 
-    if (encounter.saved) {
+    if (_saved) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(40),
@@ -538,6 +573,12 @@ class _EncounterBody extends ConsumerWidget {
               const SizedBox(height: 16),
               Text('Registro de prueba completado',
                   style: textTheme.titleMedium, textAlign: TextAlign.center),
+              const SizedBox(height: 20),
+              ContigoButton(
+                label: 'Volver a Tejiendo vínculos',
+                variant: ContigoButtonVariant.secondary,
+                onPressed: () => context.goBack(AppRoute.caregiverConnections),
+              ),
             ],
           ),
         ),
@@ -596,7 +637,7 @@ class _EncounterBody extends ConsumerWidget {
           ContigoButton(
             label: 'Guardar registro',
             fullWidth: true,
-            onPressed: encounter.allAnswered ? controller.markSaved : null,
+            onPressed: encounter.allAnswered ? () => _save(controller) : null,
           ),
         ],
       ),
@@ -869,6 +910,19 @@ class _IntimateMessageBodyState extends ConsumerState<_IntimateMessageBody> {
   // misma asociación se recupera.
   final TextEditingController _controller = TextEditingController();
 
+  /// Confirmación transitoria de «Preparar borrador» (auditoría 3, H-01): tras
+  /// el aviso se vuelve a Tejiendo vínculos; al reabrir, el texto sigue
+  /// disponible para editarlo (como `initialText` del prototipo).
+  bool _prepared = false;
+  Timer? _returnTimer;
+
+  void _prepare() {
+    setState(() => _prepared = true);
+    _returnTimer = Timer(const Duration(seconds: 2), () {
+      if (mounted) context.goBack(AppRoute.caregiverConnections);
+    });
+  }
+
   static const List<String> _chips = [
     'Recordarle que estás',
     'Compartir un recuerdo',
@@ -884,6 +938,7 @@ class _IntimateMessageBodyState extends ConsumerState<_IntimateMessageBody> {
 
   @override
   void dispose() {
+    _returnTimer?.cancel();
     _controller.dispose();
     super.dispose();
   }
@@ -906,7 +961,7 @@ class _IntimateMessageBodyState extends ConsumerState<_IntimateMessageBody> {
     final controller = ref.read(intimateMessageControllerProvider.notifier);
     _syncText(message.text);
 
-    if (message.saved) {
+    if (_prepared) {
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(40),
@@ -1043,8 +1098,29 @@ class _IntimateMessageBodyState extends ConsumerState<_IntimateMessageBody> {
           ContigoButton(
             label: 'Preparar borrador',
             fullWidth: true,
-            onPressed:
-                message.text.trim().isEmpty ? null : controller.markSaved,
+            onPressed: message.text.trim().isEmpty ? null : _prepare,
+          ),
+          const SizedBox(height: 10),
+          // Auditoría 3, H-03: acciones del prototipo (`MobileScreen10`).
+          ContigoButton(
+            label: 'Guardar como borrador',
+            variant: ContigoButtonVariant.secondary,
+            fullWidth: true,
+            onPressed: message.text.trim().isEmpty
+                ? null
+                : () => ScaffoldMessenger.of(context)
+                  ..hideCurrentSnackBar()
+                  ..showSnackBar(const SnackBar(
+                    content:
+                        Text('Borrador de prueba conservado en esta sesión.'),
+                  )),
+          ),
+          const SizedBox(height: 10),
+          ContigoButton(
+            label: 'Cancelar',
+            variant: ContigoButtonVariant.tertiary,
+            fullWidth: true,
+            onPressed: () => context.goBack(AppRoute.caregiverConnections),
           ),
         ],
       ),

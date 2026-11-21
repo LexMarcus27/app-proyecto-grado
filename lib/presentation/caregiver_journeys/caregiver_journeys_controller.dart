@@ -34,6 +34,15 @@ abstract class _CareJourneyNotifier<T> extends Notifier<Map<String, T>> {
     if (key == null) return;
     state = {...state, key: update(stateForKey(key))};
   }
+
+  /// Descarta el estado del vínculo vigente (p. ej. tras completar un
+  /// registro), de modo que la siguiente entrada empiece con el formulario
+  /// vacío, como el estado local del prototipo (auditoría 3, H-01).
+  void clearCurrent() {
+    final key = _key;
+    if (key == null) return;
+    state = {...state}..remove(key);
+  }
 }
 
 // ─── Registro de la relación (MobileScreen12) ───────────────────────────────

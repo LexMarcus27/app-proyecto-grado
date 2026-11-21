@@ -131,4 +131,75 @@ void main() {
     expect(find.text('Necesitas un vínculo activo'), findsOneWidget);
     expect(find.textContaining('Mensaje íntimo para'), findsNothing);
   });
+
+  // Auditoría 3, H-01: completar no deja el recorrido bloqueado en la
+  // confirmación; una nueva entrada muestra de nuevo el formulario.
+  Future<void> reopen(WidgetTester tester, ProviderContainer c, String path) async {
+    await tester.pump(const Duration(seconds: 3)); // regreso automático
+    await tester.pumpAndSettle();
+    c.read(routerProvider).go(AppPath.caregiverHome);
+    await tester.pumpAndSettle();
+    c.read(routerProvider).push(path);
+    await tester.pumpAndSettle();
+  }
+
+  testWidgets('mensaje íntimo: tras preparar, al reabrir se edita el mismo texto',
+      (tester) async {
+    final c = await _container(_active);
+    addTearDown(c.dispose);
+    await _pump(tester, c, AppPath.caregiverIntimateMessage);
+    await tester.enterText(find.byType(TextField), 'Pensé en ti hoy.');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Preparar borrador'));
+    await tester.pumpAndSettle();
+    expect(find.text('Borrador de prueba preparado'), findsOneWidget);
+    await reopen(tester, c, AppPath.caregiverIntimateMessage);
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.text('Pensé en ti hoy.'), findsWidgets);
+  });
+
+  testWidgets('mensaje íntimo ofrece «Guardar como borrador» y «Cancelar» (H-03)',
+      (tester) async {
+    final c = await _container(_active);
+    addTearDown(c.dispose);
+    await _pump(tester, c, AppPath.caregiverIntimateMessage);
+    await tester.enterText(find.byType(TextField), 'Un recuerdo.');
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Guardar como borrador'));
+    await tester.pump();
+    expect(find.text('Borrador de prueba conservado en esta sesión.'), findsOneWidget);
+    expect(find.text('Cancelar'), findsOneWidget);
+  });
+
+  testWidgets('registro del vínculo: una segunda entrada muestra el formulario',
+      (tester) async {
+    final c = await _container(_active);
+    addTearDown(c.dispose);
+    await _pump(tester, c, AppPath.caregiverLinkCheckIn);
+    await tester.tap(find.text('No'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Completar registro de prueba'));
+    await tester.pump();
+    expect(find.text('Registro de prueba completado'), findsOneWidget);
+    await reopen(tester, c, AppPath.caregiverLinkCheckIn);
+    expect(find.text('Registro de prueba completado'), findsNothing);
+    expect(find.text('Completar registro de prueba'), findsOneWidget);
+  });
+
+  testWidgets('encuentro: una segunda entrada muestra el formulario',
+      (tester) async {
+    final c = await _container(_active);
+    addTearDown(c.dispose);
+    await _pump(tester, c, AppPath.caregiverEncounter);
+    for (var i = 0; i < 4; i++) {
+      await tester.tap(find.text('1').at(i));
+      await tester.pumpAndSettle();
+    }
+    await tester.tap(find.text('Guardar registro'));
+    await tester.pump();
+    expect(find.text('Registro de prueba completado'), findsOneWidget);
+    await reopen(tester, c, AppPath.caregiverEncounter);
+    expect(find.text('Registro de prueba completado'), findsNothing);
+    expect(find.text('Guardar registro'), findsOneWidget);
+  });
 }
