@@ -63,7 +63,13 @@ class _BottomNav extends StatelessWidget {
                                     : const Color(0xFF626169),
                               ),
                               const SizedBox(height: 3),
-                              Text(
+                              // Tope de 1,5× como las barras de pestañas del
+                              // sistema: a 2,0× «Vínculos» y «Aprender» se
+                              // abreviaban (G8, sesión 4). El lector de
+                              // pantalla lee la etiqueta completa.
+                              MediaQuery.withClampedTextScaling(
+                                maxScaleFactor: 1.5,
+                                child: Text(
                                 tab.label,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -77,6 +83,7 @@ class _BottomNav extends StatelessWidget {
                                       ? activeColor
                                       : const Color(0xFF626169),
                                 ),
+                              ),
                               ),
                             ],
                           ),

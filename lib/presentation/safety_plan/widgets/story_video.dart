@@ -50,6 +50,16 @@ class _StoryVideoState extends State<StoryVideo> {
   VideoPlayerController? _controller;
   bool _failed = false;
 
+  /// Último estado de reproducción pintado. El reproductor deja de reproducir
+  /// por su cuenta al terminar el clip; sin escuchar ese cambio, el botón de
+  /// reproducir no reaparecía (verificación Android, sesión 4, S4-H01).
+  bool _playing = false;
+
+  void _onVideoChanged() {
+    final playing = _controller?.value.isPlaying ?? false;
+    if (playing != _playing && mounted) setState(() => _playing = playing);
+  }
+
   @override
   void initState() {
     super.initState();
@@ -61,9 +71,13 @@ class _StoryVideoState extends State<StoryVideo> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.asset != widget.asset) {
       final previous = _controller;
-      if (previous != null) unawaited(_safeDispose(previous));
+      if (previous != null) {
+        previous.removeListener(_onVideoChanged);
+        unawaited(_safeDispose(previous));
+      }
       _controller = null;
       _failed = false;
+      _playing = false;
       _initialize();
     }
   }
@@ -76,6 +90,7 @@ class _StoryVideoState extends State<StoryVideo> {
         unawaited(_safeDispose(controller));
         return;
       }
+      controller.addListener(_onVideoChanged);
       setState(() => _controller = controller);
     } catch (_) {
       // Muestra el respaldo de inmediato: NO esperamos a `dispose()`. En
@@ -106,16 +121,19 @@ class _StoryVideoState extends State<StoryVideo> {
   @override
   void dispose() {
     final controller = _controller;
-    if (controller != null) unawaited(_safeDispose(controller));
+    if (controller != null) {
+      controller.removeListener(_onVideoChanged);
+      unawaited(_safeDispose(controller));
+    }
     super.dispose();
   }
 
   void _togglePlay() {
     final controller = _controller;
     if (controller == null) return;
-    setState(() {
-      controller.value.isPlaying ? controller.pause() : controller.play();
-    });
+    // Al terminar, `play()` vuelve al inicio del clip.
+    controller.value.isPlaying ? controller.pause() : controller.play();
+    _onVideoChanged();
   }
 
   @override
@@ -141,7 +159,7 @@ class _StoryVideoState extends State<StoryVideo> {
         ),
       );
     } else if (ready) {
-      final playing = controller.value.isPlaying;
+      final playing = _playing;
       media = Semantics(
         label: 'Video: ${widget.title}',
         child: AspectRatio(

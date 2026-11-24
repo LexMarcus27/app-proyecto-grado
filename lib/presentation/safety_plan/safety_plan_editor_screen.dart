@@ -734,12 +734,17 @@ class _StepStatusIcon extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: _peachBorder, width: 1.8),
       ),
-      child: Text(
-        '$step',
-        style: const TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w800,
-          color: _pending,
+      // El número escala con la fuente hasta 1,3×; más allá rebasaba el
+      // círculo fijo de 30 px (verificación Android, sesión 4, G8).
+      child: MediaQuery.withClampedTextScaling(
+        maxScaleFactor: 1.3,
+        child: Text(
+          '$step',
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w800,
+            color: _pending,
+          ),
         ),
       ),
     );
