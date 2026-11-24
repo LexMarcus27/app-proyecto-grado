@@ -1,6 +1,7 @@
 import 'package:contigo/app/theme.dart';
 import 'package:contigo/presentation/ema/widgets/ema_range_item.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -50,6 +51,40 @@ class _ControlledRangeState extends State<_ControlledRange> {
 
 void main() {
   group('EmaRangeItem', () {
+    testWidgets(
+      'TalkBack: las acciones de aumentar y disminuir ajustan el valor '
+      '(verificación Android, E8)',
+      (tester) async {
+        final handle = tester.ensureSemantics();
+        final values = <int>[];
+        await tester.pumpWidget(_ControlledRange(onValue: values.add));
+
+        SemanticsNode node() => tester.getSemantics(find.byType(EmaRangeItem));
+        void perform(SemanticsAction action) =>
+            node().owner!.performAction(node().id, action);
+
+        final data = node().getSemanticsData();
+        expect(data.hasAction(SemanticsAction.increase), isTrue);
+        expect(data.hasAction(SemanticsAction.decrease), isTrue);
+        // En Android, TalkBack traduce sus gestos de ajuste a desplazamiento
+        // y el puente de Flutter prioriza scrollLeft/scrollRight sobre
+        // increase/decrease: el arrastre no debe exponerlos.
+        expect(data.hasAction(SemanticsAction.scrollLeft), isFalse);
+        expect(data.hasAction(SemanticsAction.scrollRight), isFalse);
+
+        perform(SemanticsAction.increase); // sin responder → 51
+        await tester.pump();
+        perform(SemanticsAction.increase); // 52
+        await tester.pump();
+        perform(SemanticsAction.decrease); // 51
+        await tester.pump();
+
+        expect(values, [51, 52, 51]);
+        expect(node().getSemanticsData().value, '51 de 100');
+        handle.dispose();
+      },
+    );
+
     testWidgets(
       'inicia sin responder: Semantics es slider con "Sin responder"',
       (tester) async {
