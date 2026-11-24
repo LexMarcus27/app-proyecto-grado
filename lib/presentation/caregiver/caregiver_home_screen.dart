@@ -44,8 +44,10 @@ class CaregiverHomeScreen extends ConsumerWidget {
             children: [
               const StatusBar(),
               const SizedBox(height: 12),
-              SizedBox(
-                height: 150,
+              // Alto mínimo del diseño; crece con la fuente grande en vez de
+              // recortar el saludo (S4-H02, verificación Android G8).
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 150),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
@@ -284,13 +286,17 @@ class _LinkStatusChip extends StatelessWidget {
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 6),
-          Text(
-            active ? 'Vínculo activo' : 'Sin vínculo activo',
-            style: TextStyle(
-              fontSize: 13,
-              height: 18 / 13,
-              fontWeight: FontWeight.w700,
-              color: color,
+          // Flexible: con fuente grande, «Sin vínculo activo» parte en líneas
+          // en vez de desbordar la tarjeta (G8, sesión 4).
+          Flexible(
+            child: Text(
+              active ? 'Vínculo activo' : 'Sin vínculo activo',
+              style: TextStyle(
+                fontSize: 13,
+                height: 18 / 13,
+                fontWeight: FontWeight.w700,
+                color: color,
+              ),
             ),
           ),
         ],

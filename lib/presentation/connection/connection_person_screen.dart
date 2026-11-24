@@ -949,30 +949,43 @@ class _ConnectionViewState extends State<_ConnectionView> {
             color: const Color(0xFFF7F2EC),
             borderRadius: BorderRadius.circular(14),
           ),
+          // El rótulo «Contacto de confianza» pasa bajo el nombre cuando no
+          // cabe al lado: con fuente grande, la fila fija comprimía «Enviar a»
+          // letra por letra y desbordaba el rótulo (G8, sesión 4).
           child: Row(
             children: [
               const HomeAvatar(index: 0, size: 36),
               const SizedBox(width: 10),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  alignment: WrapAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Enviar a',
-                      style: TextStyle(fontSize: 12, color: ContigoColors.inkMuted),
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Enviar a',
+                          style: TextStyle(
+                              fontSize: 12, color: ContigoColors.inkMuted),
+                        ),
+                        Text(
+                          _recipient,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                            color: ContigoColors.ink,
+                          ),
+                        ),
+                      ],
                     ),
-                    Text(
-                      _recipient,
-                      style: const TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        color: ContigoColors.ink,
-                      ),
-                    ),
+                    const _Chip(label: 'Contacto de confianza'),
                   ],
                 ),
               ),
-              const _Chip(label: 'Contacto de confianza'),
             ],
           ),
         ),
@@ -1314,16 +1327,20 @@ class _ActivityChip extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Semantics(
-                button: true,
-                selected: selected,
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 14,
-                    height: 20 / 14,
-                    fontWeight: FontWeight.w600,
-                    color: foreground,
+              // Flexible: con fuente grande el texto parte en líneas dentro
+              // de la pastilla en vez de desbordarla (G8, sesión 4).
+              Flexible(
+                child: Semantics(
+                  button: true,
+                  selected: selected,
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 20 / 14,
+                      fontWeight: FontWeight.w600,
+                      color: foreground,
+                    ),
                   ),
                 ),
               ),
@@ -1377,13 +1394,15 @@ class _AddActivityChip extends StatelessWidget {
               children: [
                 Icon(Icons.add, size: 20, color: _brand),
                 SizedBox(width: 6),
-                Text(
-                  'Agregar actividad',
-                  style: TextStyle(
-                    fontSize: 14,
-                    height: 20 / 14,
-                    fontWeight: FontWeight.w600,
-                    color: _brand,
+                Flexible(
+                  child: Text(
+                    'Agregar actividad',
+                    style: TextStyle(
+                      fontSize: 14,
+                      height: 20 / 14,
+                      fontWeight: FontWeight.w600,
+                      color: _brand,
+                    ),
                   ),
                 ),
               ],
