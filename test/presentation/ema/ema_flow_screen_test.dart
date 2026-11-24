@@ -462,6 +462,62 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Hilo 1 de 9'), findsOneWidget);
     });
+
+    testWidgets(
+      'con fuente al 150 % y 360 dp los extremos no se desbordan y '
+      '«Necesito apoyo» no tapa la salida (verificación Android, E8)',
+      (tester) async {
+        SharedPreferences.setMockInitialValues({});
+        final prefs = await SharedPreferences.getInstance();
+        final journey = seedForScenario(DemoScenario.withActiveLink);
+        final reference = emaReferenceForPerson(journey, 'demo-m')!;
+
+        await tester.pumpWidget(
+          _host(
+            journeyRepository: _FakeJourneyRepository(journey),
+            referenceStore: _FakeEmaReferenceStore(reference),
+            draftStore: _FakeEmaDraftStore(),
+            prefs: prefs,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        // Avanza hasta el primer ítem de rango.
+        var guard = 0;
+        while (!tester.any(find.byType(EmaRangeItem)) && guard++ < 9) {
+          await _answerCurrentAndAdvance(tester);
+        }
+        expect(find.byType(EmaRangeItem), findsOneWidget);
+
+        // Pantalla angosta con fuente grande, como en el AVD.
+        tester.view.devicePixelRatio = 3;
+        tester.view.physicalSize = const Size(360 * 3, 800 * 3);
+        tester.platformDispatcher.textScaleFactorTestValue = 1.5;
+        addTearDown(tester.view.reset);
+        addTearDown(tester.platformDispatcher.clearTextScaleFactorTestValue);
+        await tester.pumpAndSettle();
+        await tester.drag(find.byType(ListView), const Offset(0, 3000));
+        await tester.pumpAndSettle();
+        await tester.scrollUntilVisible(
+          find.text('Completamente cierta'),
+          100,
+          scrollable: find
+              .descendant(
+                  of: find.byType(ListView), matching: find.byType(Scrollable))
+              .first,
+        );
+        expect(tester.takeException(), isNull,
+            reason: 'los extremos de la barra no deben desbordarse');
+
+        // Al final del hilo, la salida queda por encima del botón de apoyo.
+        await tester.drag(find.byType(ListView), const Offset(0, -2000));
+        await tester.pumpAndSettle();
+        final exit = tester.getRect(find.text('Prefiero responder después'));
+        final support = tester.getRect(find.text('Necesito apoyo'));
+        expect(exit.bottom, lessThanOrEqualTo(support.top),
+            reason: '«Necesito apoyo» no debe tapar la salida del hilo');
+      },
+    );
   });
 }
 

@@ -952,7 +952,13 @@ class _QuestionnaireBody extends StatelessWidget {
         _Banner(position: position, total: indices.length),
         Expanded(
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+            // Una lista por hilo: al avanzar o retroceder, el hilo nuevo empieza
+            // arriba, con su pregunta a la vista, en lugar de heredar el
+            // desplazamiento del anterior.
+            key: ValueKey('ema-hilo-${draft.questionIndex}'),
+            // Reserva el alto del botón «Necesito apoyo» para que no tape
+            // «Prefiero responder después» al final del hilo (E8).
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, supportContentPadding),
             children: [
               if (omitted)
                 Padding(

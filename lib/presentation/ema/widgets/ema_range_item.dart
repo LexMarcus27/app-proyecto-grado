@@ -223,6 +223,12 @@ class _EmaRangeItemState extends State<EmaRangeItem> {
         final width = constraints.maxWidth;
         return GestureDetector(
           behavior: HitTestBehavior.opaque,
+          // Sin semántica propia: el arrastre expondría scrollLeft/scrollRight
+          // y, en Android, TalkBack los usa antes que increase/decrease, así
+          // que sus gestos de ajuste no cambiaban el valor (verificación
+          // Android, sesión 2, E8). El ajuste accesible lo da el [Semantics]
+          // del ítem.
+          excludeFromSemantics: true,
           onTapDown: (details) {
             _focusNode.requestFocus();
             _handleTapAt(details.localPosition.dx, width);
@@ -255,6 +261,9 @@ class _EmaRangeItemState extends State<EmaRangeItem> {
       hint: _EmaRangeText.keyboardHint,
       onIncrease: _onIncrease,
       onDecrease: _onDecrease,
+      // Doble toque con lector de pantalla: sin responder, asigna el valor
+      // central (como Enter/Espacio del prototipo).
+      onTap: _unanswered ? () => _emit(50) : null,
       child: Focus(
         focusNode: _focusNode,
         onKeyEvent: _onKey,
@@ -278,19 +287,29 @@ class _EmaRangeItemState extends State<EmaRangeItem> {
                   // el valor numérico nunca se expone visualmente.
                   bar,
                   const SizedBox(height: 8),
+                  // Cada extremo ocupa su mitad y parte en líneas si no cabe:
+                  // con fuente grande en pantallas angostas se juntaban y
+                  // «Completamente cierta» se cortaba (verificación Android,
+                  // sesión 2, E8).
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ExcludeSemantics(
-                        child: Text(
-                          _EmaRangeText.endpointLow,
-                          style: endpointStyle,
+                      Expanded(
+                        child: ExcludeSemantics(
+                          child: Text(
+                            _EmaRangeText.endpointLow,
+                            style: endpointStyle,
+                          ),
                         ),
                       ),
-                      ExcludeSemantics(
-                        child: Text(
-                          _EmaRangeText.endpointHigh,
-                          style: endpointStyle,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ExcludeSemantics(
+                          child: Text(
+                            _EmaRangeText.endpointHigh,
+                            style: endpointStyle,
+                            textAlign: TextAlign.end,
+                          ),
                         ),
                       ),
                     ],
